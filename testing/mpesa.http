@@ -1,0 +1,127 @@
+
+
+@subscriberId = 68b18daff0d98528e24b4648
+@invoiceId = 68b18daff0d98528e24b4668
+@amount = 500
+@phoneNumber = 254712345678
+
+# =============================================
+# M-PESA WORKFLOWS
+# =============================================
+
+###
+# 1. Initiate STK Push Payment
+# This calls the main Payload app, which in turn calls the external mpesa-service.
+POST http://localhost:3000/api/mpesa-initiate-payment
+Content-Type: application/json
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+{
+  "subscriberId": "{{subscriberId}}",
+  "invoiceId": "{{invoiceId}}",
+  "amount": {{amount}},
+  "phoneNumber": "{{phoneNumber}}"
+}
+
+###
+# 2. Simulate C2B Payment
+# This calls the external mpesa-service directly to simulate a C2B payment.
+POST http://localhost:5000/api/c2b-confirmation
+Content-Type: application/json
+
+{
+  "TransID": "C2B_MOCK_67890",
+  "TransTime": "20250829130000",
+  "TransAmount": "600",
+  "BusinessShortCode": "600999",
+  "BillRefNumber": "SUB002",
+  "MSISDN": "254718093254",
+  "FirstName": "Jane",
+  "LastName": "Doe"
+}
+
+
+# =============================================
+# DATA VERIFICATION
+# =============================================
+
+###
+# Get All Subscribers
+GET http://localhost:3000/api/subscribers
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+###
+# Get All Invoices
+GET http://localhost:3000/api/invoices
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+###
+# Get All Payments
+GET http://localhost:3000/api/payments
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+
+# =============================================
+# MONEY MATH TEST - JOHN DOE
+# =============================================
+
+# Starting State for John Doe (SUB001):
+#   accountBalance: 0
+#   Invoice 1 (INV-SUB001-001 - 68b18daff0d98528e24b4668): amountDue: 1500, status: unpaid
+#   Invoice 2 (INV-1756466607517 - 68b18daff0d98528e24b464c): amountDue: 1500, status: unpaid
+
+###
+# Test 1: Partial Payment (500 KES) for INV-SUB001-001
+# Expected: Invoice 1 becomes partially-paid (1000 due). accountBalance becomes -500.
+POST http://localhost:3000/api/mpesa-initiate-payment
+Content-Type: application/json
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+{
+  "subscriberId": "68b18daff0d98528e24b4648",
+  "invoiceId": "68b18daff0d98528e24b4668",
+  "amount": 500,
+  "phoneNumber": "254712345678"
+}
+
+###
+# Test 2: Full Payment of Remaining Balance (1000 KES) for INV-SUB001-001
+# Expected: Invoice 1 becomes paid (0 due). accountBalance becomes -1500.
+POST http://localhost:3000/api/mpesa-initiate-payment
+Content-Type: application/json
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+{
+  "subscriberId": "68b18daff0d98528e24b4648",
+  "invoiceId": "68b18daff0d98528e24b4668",
+  "amount": 1000,
+  "phoneNumber": "254712345678"
+}
+
+###
+# Test 3: Overpayment (2000 KES) for INV-1756466607517
+# Expected: Invoice 2 becomes paid (0 due). accountBalance becomes -3500.
+POST http://localhost:3000/api/mpesa-initiate-payment
+Content-Type: application/json
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+{
+  "subscriberId": "68b18daff0d98528e24b4648",
+  "invoiceId": "68b18daff0d98528e24b464c",
+  "amount": 2000,
+  "phoneNumber": "254712345678"
+}
+
+###
+# Test 4: Advance Payment (1000 KES) - No open invoices
+# Expected: accountBalance becomes -4500. No invoice status changes.
+POST http://localhost:3000/api/mpesa-initiate-payment
+Content-Type: application/json
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+{
+  "subscriberId": "68b18daff0d98528e24b4648",
+  "invoiceId": "68b18daff0d98528e24b4668",
+  "amount": 1000,
+  "phoneNumber": "254712345678"
+}

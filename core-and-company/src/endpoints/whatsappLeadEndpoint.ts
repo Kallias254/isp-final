@@ -1,0 +1,54 @@
+import { Payload } from 'payload';
+import { Endpoint } from 'payload/config';
+
+const whatsappLeadEndpoint: Endpoint = {
+  path: '/whatsapp-lead',
+  method: 'post',
+  handler: async (req, res) => {
+    const payload: Payload = req.payload;
+    const { phoneNumber, subscriberName, serviceLocation, notes } = req.body;
+
+    if (!phoneNumber || !subscriberName || !serviceLocation) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    try {
+      // 1. Find the Partner by phoneNumber
+      const partners = await payload.find({
+        collection: 'partners',
+        where: {
+          phoneNumber: {
+            equals: phoneNumber,
+          },
+        },
+      });
+
+      const partner = partners.docs[0];
+
+      if (!partner) {
+        return res.status(404).json({ message: 'Partner not found for this phone number' });
+      }
+
+      // 2. Create a new Lead
+      const newLead = await payload.create({
+        collection: 'leads',
+        data: {
+          status: 'new',
+          leadSource: 'partner-referral',
+          referredBy: partner.id,
+          subscriberName,
+          subscriberPhone: phoneNumber,
+          serviceLocation,
+          notes,
+        },
+      });
+
+      return res.status(200).json({ message: 'Lead created successfully', lead: newLead });
+    } catch (error: any) {
+      payload.logger.error(`Error creating lead from WhatsApp: ${error.message}`);
+      return res.status(500).json({ message: 'Internal server error', error: error.message });
+    }
+  },
+};
+
+export default whatsappLeadEndpoint;

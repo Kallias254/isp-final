@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: core-and-company-mongodb
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: always
+    networks:
+      - app-network
+
+  payload:
+    build: ./core-and-company
+    container_name: core-and-company-payload
+    ports:
+      - "3000:3000"
+    environment:
+      PAYLOAD_SECRET: 92617ffecc8e2e15a8aa8c2e8d453806a908317371c43b2250ae4998ee053ace
+      MONGODB_URI: mongodb://mongodb:27017/payload
+      NODE_ENV: production
+      PAYLOAD_PUBLIC_SERVER_URL: http://payload:3000
+    restart: always
+    networks:
+      - app-network
+
+  mpesa-mock-service:
+    build: ./external-services/mpesa-mock-service
+    container_name: mpesa-mock-service
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: development
+    restart: always
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mpesa-service: # New M-Pesa Service
+    build: ./external-services/mpesa-service
+    container_name: mpesa-service
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./external-services/mpesa-service/.env
+    restart: always
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  notification-service: # New Notification Service
+    build: ./external-services/notification-service
+    container_name: notification-service
+    ports:
+      - "6000:6000"
+    restart: always
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongodb_data:
+
+networks:
+  app-network:
+    driver: bridge

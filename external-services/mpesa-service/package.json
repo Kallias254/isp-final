@@ -1,0 +1,18 @@
+{
+  "name": "mpesa-service",
+  "version": "1.0.0",
+  "description": "A service to interact with the Safaricom Daraja API for M-Pesa payments.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "body-parser": "^1.20.2",
+    "node-fetch": "^2.6.7",
+    "axios": "^0.21.4"
+  }
+}

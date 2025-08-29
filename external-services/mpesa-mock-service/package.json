@@ -1,0 +1,17 @@
+{
+  "name": "mpesa-mock-service",
+  "version": "1.0.0",
+  "description": "A mock service to simulate M-Pesa STK Push and callbacks.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "body-parser": "^1.20.2",
+    "node-fetch": "^2.6.7"
+  }
+}

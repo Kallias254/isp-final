@@ -44,6 +44,7 @@ import { payloadCloud } from '@payloadcms/plugin-cloud';
 import BeforeDashboard from './components/BeforeDashboard';
 
 export default buildConfig({
+  cors: ['http://localhost:3002'],
   admin: {
     user: Staff.slug,
     

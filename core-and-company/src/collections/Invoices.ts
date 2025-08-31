@@ -1,4 +1,5 @@
 import { CollectionConfig } from 'payload/types';
+import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
 import { sendNotification } from '../utils/notificationService'; // Import sendNotification
 import { isAdminOrHasPermission } from '../utils/access';
 
@@ -149,6 +150,7 @@ const Invoices: CollectionConfig = {
         }
       },
     ],
+    afterDelete: [getAuditLogDeleteHook('invoices')],
   },
 };
 

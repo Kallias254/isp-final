@@ -1,0 +1,49 @@
+# =============================================
+# INVOICES WORKFLOW
+# =============================================
+
+###
+# Create a new invoice
+POST http://localhost:3001/api/invoices
+Content-Type: application/json
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+{
+  "invoiceNumber": "INV-{{$timestamp}}",
+  "subscriber": "68b18daff0d98528e24b4648",
+  "amountDue": 1500,
+  "dueDate": "2025-09-30",
+  "status": "unpaid",
+  "lineItems": [
+    {
+      "description": "Monthly Subscription",
+      "quantity": 1,
+      "price": 1500
+    }
+  ]
+}
+
+###
+# Get all invoices
+GET http://localhost:3001/api/invoices
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+###
+# Get a single invoice
+GET http://localhost:3001/api/invoices/{{invoiceId}}
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+###
+# Update an invoice
+PATCH http://localhost:3001/api/invoices/{{invoiceId}}
+Content-Type: application/json
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+{
+  "status": "paid"
+}
+
+###
+# Delete an invoice
+DELETE http://localhost:3001/api/invoices/{{invoiceId}}
+Authorization: Bearer {{adminLogin.response.body.token}}

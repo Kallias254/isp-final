@@ -1,0 +1,43 @@
+# =============================================
+# PAYMENTS WORKFLOW
+# =============================================
+
+###
+# Create a new payment
+POST http://localhost:3001/api/payments
+Content-Type: application/json
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+{
+  "subscriber": "68b18daff0d98528e24b4648",
+  "invoice": "68b18daff0d98528e24b4668",
+  "amountPaid": 1500,
+  "paymentDate": "2025-09-30",
+  "paymentMethod": "mpesa",
+  "transactionId": "C2B_MOCK_67890"
+}
+
+###
+# Get all payments
+GET http://localhost:3001/api/payments
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+###
+# Get a single payment
+GET http://localhost:3001/api/payments/{{paymentId}}
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+###
+# Update a payment
+PATCH http://localhost:3001/api/payments/{{paymentId}}
+Content-Type: application/json
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+{
+  "amountPaid": 1600
+}
+
+###
+# Delete a payment
+DELETE http://localhost:3001/api/payments/{{paymentId}}
+Authorization: Bearer {{adminLogin.response.body.token}}

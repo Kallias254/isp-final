@@ -2,11 +2,11 @@ import { buildConfig } from 'payload/config';
 import path from 'path';
 
 // Core and Company Collections
-import Users from './collections/Users';
 import Staff from './collections/Staff';
 import Plans from './collections/Plans';
 import Partners from './collections/Partners';
 import Roles from './collections/core/Roles'; // New import
+import AuditLogs from './collections/AuditLogs';
 
 // Billing and Finance Collections
 import Invoices from './collections/Invoices';
@@ -45,13 +45,23 @@ import BeforeDashboard from './components/BeforeDashboard';
 
 export default buildConfig({
   admin: {
-    user: Users.slug,
+    user: Staff.slug,
+    
     components: {
       beforeDashboard: [BeforeDashboard],
     }
   },
+  endpoints: [
+    whatsappLeadEndpoint,
+    billingCronEndpoint,
+    mpesaCallbackEndpoint,
+    mpesaInitiatePaymentEndpoint, // New endpoint
+    zabbixWebhookEndpoint,
+    sendManualMessageEndpoint,
+    sendBulkMessageEndpoint,
+  ],
   collections: [
-    Users,
+    AuditLogs,
     Staff,
     Roles, // New collection
     Plans,
@@ -72,15 +82,6 @@ export default buildConfig({
     Messages,
     Contacts,
     MessageTemplates,
-  ],
-  endpoints: [
-    whatsappLeadEndpoint,
-    billingCronEndpoint,
-    mpesaCallbackEndpoint,
-    mpesaInitiatePaymentEndpoint, // New endpoint
-    zabbixWebhookEndpoint,
-    sendManualMessageEndpoint,
-    sendBulkMessageEndpoint,
   ],
   typescript: {
     outputFile: path.resolve(__dirname, 'payload-types.ts'),

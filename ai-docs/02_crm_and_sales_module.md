@@ -10,7 +10,8 @@ The Story: This module is the engine of the ISP's growth. It covers the entire c
 
 | Field Name | Type | Notes |
 | :--- | :--- | :--- |
-| name | Text | required, e.g., "Mombasa Trade Center" |
+| name       | Text          | required, e.g., "Mombasa Trade Center" |
+| buildingImage | Upload | hasOne, Links to Media collection for the building's photo. |
 | address | Text | required |
 | status | Select | required, Options: Prospecting, Negotiating, Active, Lost |
 | partner | Relationship| hasOne, Links to the Partners collection (the caretaker) |
@@ -38,6 +39,8 @@ The Story: This module is the engine of the ISP's growth. It covers the entire c
 | subscriberName| Text | required |
 | subscriberPhone| Text | required |
 | serviceLocation| Relationship| required, hasOne, Links to BuildingUnits |
+| preferredPlan | Relationship | optional, hasOne, Links to Plans. Customer's desired plan. |
+| preferredBillingCycle | Select | optional, Options: Monthly, Quarterly. |
 | notes | Rich Text | |
 
 ## Workflows:
@@ -50,9 +53,9 @@ The Story: This module is the engine of the ISP's growth. It covers the entire c
 
 ### Lead Conversion:
 
-1.  A Sales Agent changes a Lead's status to Converted.
-2.  A Payload afterChange hook triggers.
-3.  The hook creates a new Subscriber record in the Billing module.
-4.  It sets the new subscriber's status to Pending Installation.
-5.  It publishes a subscriber.created event for other modules to consume.
-6.  If the lead was from a partner, it increments the referralCount on the Partner's record.
+1.  A Sales Agent changes a Lead's status to `Converted`.
+2.  A Payload `afterChange` hook triggers.
+3.  The hook creates a new `Subscriber` record. If `preferredPlan` and `preferredBillingCycle` exist on the lead, they are copied to the new subscriber.
+4.  The new subscriber's status is set to `Pending Installation`.
+5.  A `New Installation` work order is automatically created for the subscriber.
+6.  If the lead was from a partner, the hook increments the `referralCount` on the Partner's record.

@@ -5,7 +5,7 @@
 ###
 # @name adminLogin
 # Admin Login
-POST http://localhost:3000/api/users/login
+POST http://localhost:3001/api/staff/login
 Content-Type: application/json
 
 {

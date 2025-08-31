@@ -1,10 +1,15 @@
 import { CollectionConfig } from 'payload/types';
 import { isAdminOrHasPermission } from '../utils/access';
+import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
 
 const Media: CollectionConfig = {
   slug: 'media',
   upload: {
     staticDir: './media',
+  },
+  hooks: {
+    afterChange: [getAuditLogHook('media')],
+    afterDelete: [getAuditLogDeleteHook('media')],
   },
   access: {
     read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'media' }),

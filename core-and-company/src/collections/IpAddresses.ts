@@ -1,10 +1,15 @@
 import { CollectionConfig } from 'payload/types';
 import { isAdminOrHasPermission } from '../utils/access';
+import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
 
 const IpAddresses: CollectionConfig = {
   slug: 'ipAddresses',
   admin: {
     useAsTitle: 'ipAddress',
+  },
+  hooks: {
+    afterChange: [getAuditLogHook('ipAddresses')],
+    afterDelete: [getAuditLogDeleteHook('ipAddresses')],
   },
   access: {
     read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'ipAddresses' }),

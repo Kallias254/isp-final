@@ -1,10 +1,15 @@
 import { CollectionConfig } from 'payload/types';
 import { isAdminOrHasPermission } from '../utils/access';
+import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
 
 const IpSubnets: CollectionConfig = {
   slug: 'ipSubnets',
   admin: {
     useAsTitle: 'network',
+  },
+  hooks: {
+    afterChange: [getAuditLogHook('ipSubnets')],
+    afterDelete: [getAuditLogDeleteHook('ipSubnets')],
   },
   access: {
     read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'ipSubnets' }),

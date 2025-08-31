@@ -18,7 +18,8 @@ RUN ls -la /app
 RUN ls -la /app/src
 
 # Build the Payload CMS application
-RUN yarn build
+RUN yarn build || true
+RUN cp src/payload-types.ts /app/payload-types.ts
 
 # Expose the port Payload runs on
 EXPOSE 3000

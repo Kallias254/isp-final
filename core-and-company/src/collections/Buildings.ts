@@ -1,10 +1,15 @@
 import { CollectionConfig } from 'payload/types';
 import { isAdminOrHasPermission } from '../utils/access';
+import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
 
 const Buildings: CollectionConfig = {
   slug: 'buildings',
   admin: {
     useAsTitle: 'name',
+  },
+  hooks: {
+    afterChange: [getAuditLogHook('buildings')],
+    afterDelete: [getAuditLogDeleteHook('buildings')],
   },
   access: {
     read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'buildings' }),
@@ -17,6 +22,12 @@ const Buildings: CollectionConfig = {
       name: 'name',
       type: 'text',
       required: true,
+    },
+    {
+      name: 'buildingImage',
+      label: 'Building Image',
+      type: 'upload',
+      relationTo: 'media',
     },
     {
       name: 'address',

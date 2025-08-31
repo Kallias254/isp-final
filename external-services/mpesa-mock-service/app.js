@@ -1,11 +1,16 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const fetch = require('node-fetch');
+const axios = require('axios');
 
 const app = express();
 const PORT = 4000;
 
 app.use(bodyParser.json());
+
+app.get('/', (req, res) => {
+  res.status(200).send('OK');
+});
+
 
 // Endpoint to simulate STK Push initiation from Payload CMS
 app.post('/api/initiate-stk', (req, res) => {
@@ -32,7 +37,7 @@ app.post('/api/initiate-stk', (req, res) => {
   // --- Simulate M-Pesa Callback to Payload CMS after a delay ---
   // In a real scenario, Safaricom would send this callback.
   // Here, we simulate it for testing purposes.
-  setTimeout(async () => {
+  /*
     console.log('\n--- M-Pesa Mock Service: Simulating Callback to Payload CMS ---');
     const simulatedCallbackData = {
       Body: {
@@ -66,11 +71,7 @@ app.post('/api/initiate-stk', (req, res) => {
 
     try {
       console.log('Sending callback to:', callbackUrl);
-      const callbackRes = await fetch(callbackUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(simulatedCallbackData),
-      });
+      const callbackRes = await axios.post(callbackUrl, simulatedCallbackData);
 
       if (callbackRes.ok) {
         console.log('Callback successfully sent to Payload CMS.');
@@ -81,7 +82,7 @@ app.post('/api/initiate-stk', (req, res) => {
     } catch (error) {
       console.error('Error during callback simulation:', error);
     }
-  }, 5000); // Simulate a 5-second delay for the callback
+  */
 });
 
 app.listen(PORT, '0.0.0.0', () => { // Listen on all network interfaces

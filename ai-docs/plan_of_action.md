@@ -47,13 +47,22 @@ This section lists all identified custom logic, hooks, endpoints, and integratio
 
 ### 2.6. Data-Driven Access Control Refactor
 
-*   **Status:** Not Started
+*   **Status:** Completed
 *   **Goal:** Transition from hardcoded RBAC to a flexible, data-driven access control system where roles and permissions are configurable via the CMS.
 *   **Key Steps:**
     *   Create a new `Roles` collection to define user roles and their associated permissions.
     *   Update the `Staff` collection's `role` field to be a relationship to the new `Roles` collection.
     *   Implement a generic, reusable access control function that queries permissions from the `Roles` collection.
     *   Apply this generic access function to all existing Payload collections.
+
+### 2.7. System & Auditing Module (`06_system_and_auditing_module.md`)
+
+*   **Status:** Completed
+*   **Goal:** Implement a system-wide, read-only audit trail to log all significant create, update, and delete actions across all collections.
+*   **Key Steps:**
+    *   Created a new `AuditLogs` collection.
+    *   Implemented a generic hook that is applied to all collections to automatically log changes.
+    *   Ensured the log is non-editable by users.
 
 ## 3. External Services (In Progress)
 
@@ -69,13 +78,24 @@ This section lists all identified custom logic, hooks, endpoints, and integratio
 
 With the entire backend application and the simulated M-Pesa and Push Notification services now complete and tested, the project is at a major milestone. The next logical phases are:
 
-1.  **Implement Data-Driven Access Control:**
-    *   This is a critical architectural refactor to enable flexible role and permission management via the CMS. (Refer to Section 2.6 for details).
-
-2.  **Frontend Development (Next.js):**
+1.  **Frontend Development (Next.js):**
     *   Begin building the Next.js frontend application.
     *   This will consume the Payload CMS REST/GraphQL APIs for all data and user actions.
     *   Key features will include: Admin dashboards, subscriber management, ticket handling, and initiating payments.
 
-3.  **Live Integration:**
+2.  **Live Integration:**
     *   Once the external services are built and the frontend is ready, the final step is to switch the simulated services (M-Pesa, Notifications) to live mode by populating the `.env` files with real production credentials.
+
+## 5. New & Planned Initiatives
+
+### 5.1. Trial Period & Initial Billing Workflow
+*   **Status:** Completed
+*   **Specification:** `07_trial_and_initial_billing.md`
+*   **Goal:** Implement a comprehensive trial period and initial billing system that handles upfront charges, trial notifications, and the transition to a recurring subscription.
+
+### 5.2. Subscriber Data Integrity
+*   **Status:** Completed
+*   **Goal:** Prevent ISP Admins from editing a subscriber's core details after creation, while allowing the Super Admin to do so.
+*   **Key Steps:**
+    *   Applied field-level access control to `firstName`, `lastName`, `accountNumber`, `trialDays`, `upfrontCharges`, and `radiusUsername` fields in the `Subscribers` collection.
+    *   The access control logic restricts updates to the super admin (`admin@example.com`).

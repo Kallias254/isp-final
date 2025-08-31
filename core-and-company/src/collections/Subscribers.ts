@@ -1,4 +1,5 @@
 import { CollectionConfig } from 'payload/types';
+import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
 import { sendNotification } from '../utils/notificationService'; // Correctly placed import
 import { isAdminOrHasPermission } from '../utils/access';
 import { Subscriber } from '../payload-types'; // Import Subscriber type
@@ -25,16 +26,16 @@ const Subscribers: CollectionConfig = {
       name: 'firstName',
       type: 'text',
       required: true,
-      admin: {
-        readOnly: true,
+      access: {
+        update: ({ req: { user } }) => user.email === 'admin@example.com',
       },
     },
     {
       name: 'lastName',
       type: 'text',
       required: true,
-      admin: {
-        readOnly: true,
+      access: {
+        update: ({ req: { user } }) => user.email === 'admin@example.com',
       },
     },
     {
@@ -42,31 +43,22 @@ const Subscribers: CollectionConfig = {
       type: 'text',
       required: true,
       unique: true,
-      admin: {
-        readOnly: true,
+      access: {
+        update: ({ req: { user } }) => user.email === 'admin@example.com',
       },
     },
     {
       name: 'mpesaNumber',
       type: 'text',
       required: true,
-      admin: {
-        readOnly: true,
-      },
     },
     {
       name: 'contactPhone',
       type: 'text',
-      admin: {
-        readOnly: true,
-      },
     },
     {
       name: 'email',
       type: 'email',
-      admin: {
-        readOnly: true,
-      },
     },
     {
       name: 'status',
@@ -78,19 +70,12 @@ const Subscribers: CollectionConfig = {
         { label: 'Deactivated', value: 'deactivated' },
       ],
       required: true,
-      admin: {
-        readOnly: true,
-      },
     },
     {
       name: 'servicePlan',
       type: 'relationship',
       relationTo: 'plans',
       hasMany: false,
-      required: true,
-      admin: {
-        readOnly: true,
-      },
     },
     {
       name: 'billingCycle',
@@ -99,17 +84,11 @@ const Subscribers: CollectionConfig = {
         { label: 'Monthly', value: 'monthly' },
         { label: 'Quarterly', value: 'quarterly' },
       ],
-      required: true,
-      admin: {
-        readOnly: true,
-      },
     },
     {
       name: 'nextDueDate',
       type: 'date',
-      required: true,
       admin: {
-        readOnly: true,
         date: {
           pickerAppearance: 'dayOnly',
         },
@@ -119,48 +98,43 @@ const Subscribers: CollectionConfig = {
       name: 'accountBalance',
       type: 'number',
       defaultValue: 0,
-      admin: {
-        readOnly: true,
-      },
     },
     {
       name: 'gracePeriodEndDate',
       type: 'date',
       admin: {
-        readOnly: true,
         date: {
           pickerAppearance: 'dayOnly',
         },
+      },
+    },
+    {
+      name: 'trialDays',
+      label: 'Trial Days (optional)',
+      type: 'number',
+      defaultValue: 0,
+      min: 0,
+      access: {
+        update: ({ req: { user } }) => user.email === 'admin@example.com',
       },
     },
     {
       name: 'trialEndDate',
       type: 'date',
-      admin: {
-        readOnly: true,
-        date: {
-          pickerAppearance: 'dayOnly',
-        },
-      },
+      hidden: true, // This field is now managed by the beforeChange hook
     },
     {
       name: 'addressNotes',
       type: 'textarea',
-      admin: {
-        readOnly: true,
-      },
     },
     {
       name: 'internalNotes',
       type: 'richText',
-      admin: {
-        readOnly: true,
-      },
     },
     {
-      name: 'initialOneOffCharges',
+      name: 'upfrontCharges',
       type: 'array',
-      label: 'Initial One-Off Charges',
+      label: 'Upfront Charges',
       fields: [
         {
           name: 'description',
@@ -180,8 +154,11 @@ const Subscribers: CollectionConfig = {
           min: 0,
         },
       ],
+      access: {
+        update: ({ req: { user } }) => user.email === 'admin@example.com',
+      },
       admin: {
-        condition: (_, siblingData) => !siblingData.id || (siblingData.initialOneOffCharges && siblingData.initialOneOffCharges.length > 0),
+        condition: (_, siblingData) => !siblingData.id || (siblingData.upfrontCharges && siblingData.upfrontCharges.length > 0),
       },
     },
     {
@@ -197,15 +174,18 @@ const Subscribers: CollectionConfig = {
     {
       name: 'radiusUsername',
       type: 'text',
-      admin: {
-        readOnly: true,
+      access: {
+        update: ({ req: { user } }) => user.email === 'admin@example.com',
       },
     },
     {
       name: 'radiusPassword',
       type: 'text',
+      access: {
+        create: () => true,
+        update: () => false,
+      },
       admin: {
-        readOnly: true,
         hidden: true,
       },
     },
@@ -214,9 +194,6 @@ const Subscribers: CollectionConfig = {
       type: 'relationship',
       relationTo: 'ipAddresses',
       hasMany: false,
-      admin: {
-        readOnly: true,
-      },
     },
     {
       name: 'macAddress',
@@ -237,11 +214,55 @@ const Subscribers: CollectionConfig = {
     },
   ],
   hooks: {
+    beforeChange: [
+      async ({ data, operation }) => {
+        // On create, if trialDays are provided, calculate the trialEndDate and nextDueDate
+        if (operation === 'create' && data.trialDays && data.trialDays > 0) {
+          const now = new Date();
+          const endDate = new Date(now.setDate(now.getDate() + data.trialDays));
+          data.trialEndDate = endDate.toISOString();
+          data.nextDueDate = endDate.toISOString();
+        } else if (operation === 'create') {
+            // Standard signup, set next due date to now
+            data.nextDueDate = new Date().toISOString();
+        }
+        return data;
+      },
+    ],
     afterChange: [
-      // Existing hook for Initial Invoice Generation
+      // On create, if it's a trial signup with upfront charges, create an invoice for those charges
       async ({ req, doc, operation }) => {
-        const typedDoc = doc as Subscriber; // Explicitly type doc
-        if (operation === 'create') {
+        if (operation === 'create' && doc.trialDays > 0 && doc.upfrontCharges && doc.upfrontCharges.length > 0) {
+          const { payload } = req;
+          const { upfrontCharges, id: subscriberId } = doc;
+
+          let totalUpfrontAmount = 0;
+          const lineItems = upfrontCharges.map(charge => {
+            totalUpfrontAmount += charge.quantity * charge.price;
+            return charge;
+          });
+
+          await payload.create({
+            collection: 'invoices',
+            data: {
+              invoiceNumber: `INV-UPFRONT-${Date.now()}`,
+              subscriber: subscriberId,
+              amountDue: totalUpfrontAmount,
+              dueDate: new Date().toISOString(),
+              status: 'unpaid',
+              lineItems: lineItems,
+            },
+          });
+          payload.logger.info(`Upfront charges invoice created for new trial subscriber ${subscriberId}.`);
+        }
+        return doc;
+      },
+      // Existing hook for Initial Invoice Generation
+      async ({ req, doc, operation, previousDoc }) => {
+        const typedDoc: any = doc; // Use 'any' to avoid stale type errors during build
+
+        // Only generate an invoice if a service plan is assigned and the user is activated
+        if (operation === 'update' && typedDoc.status === 'active' && previousDoc.status === 'pending-installation' && typedDoc.servicePlan) {
           const payload = req.payload;
           const subscriberId = typedDoc.id;
           const servicePlan = typedDoc.servicePlan;
@@ -269,8 +290,8 @@ const Subscribers: CollectionConfig = {
           totalAmountDue += plan.price;
 
           // Add one-off charges
-          if (typedDoc.initialOneOffCharges && Array.isArray(typedDoc.initialOneOffCharges)) {
-            const initialCharges: { description: string; quantity: number; price: number; }[] = typedDoc.initialOneOffCharges;
+          if (typedDoc.upfrontCharges && Array.isArray(typedDoc.upfrontCharges)) {
+            const initialCharges: { description: string; quantity: number; price: number; }[] = typedDoc.upfrontCharges;
             if (initialCharges.length > 0) {
               initialCharges.forEach((charge: { description: string; quantity: number; price: number; }) => {
                 lineItems.push({
@@ -297,6 +318,14 @@ const Subscribers: CollectionConfig = {
           });
 
           payload.logger.info(`Initial Invoice created for Subscriber ${subscriberId}`);
+
+          // Publish the subscriber.activated event
+          payload.logger.info({
+            event: 'subscriber.activated',
+            subscriberId: subscriberId,
+            accountNumber: typedDoc.accountNumber,
+            message: `Event: Subscriber ${typedDoc.accountNumber} was activated.`
+          });
         }
         return doc;
       },
@@ -309,12 +338,12 @@ const Subscribers: CollectionConfig = {
 
           // Create a new WorkOrder for New Installation
           await payload.create({
-            collection: 'workOrders',
+            collection: 'work-orders',
             data: {
               orderType: 'new-installation',
               subscriber: subscriberId,
               status: 'pending',
-              notes: `New installation for subscriber ${doc.firstName} ${doc.lastName} (${doc.accountNumber})`,
+              notes: `New installation for subscriber ${typedDoc.firstName} ${typedDoc.lastName} (${typedDoc.accountNumber})`,
             },
           });
 
@@ -376,6 +405,7 @@ const Subscribers: CollectionConfig = {
         return doc;
       },
     ],
+    afterDelete: [getAuditLogDeleteHook('subscribers')],
   },
 };
 

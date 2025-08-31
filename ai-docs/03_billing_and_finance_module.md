@@ -18,7 +18,7 @@ The Story: This is the financial heart of the ISP. It manages the company's cash
 | email | Email | optional, For portal login & notifications |
 | status | Select | required, Options: Pending Installation, Active, Suspended, Deactivated |
 | servicePlan| Relationship| required, hasOne, Links to Plans |
-| billingCycle| Select | required, Options: Monthly, Quarterly |
+| billingCycle| Select | optional, Options: Monthly, Quarterly |
 | nextDueDate| Date | required, Set on activation and after each payment |
 | accountBalance| Number | defaultValue: 0 |
 | gracePeriodEndDate | Date | optional, Manually set to override automated suspension. |
@@ -62,7 +62,9 @@ The Story: This is the financial heart of the ISP. It manages the company's cash
 
 ## Workflows:
 
-### Initial Invoice Generation: When a Subscriber is created, the system also creates their first Invoice. The form must allow the Sales Agent to add one-off charges (e.g., Installation Fee, Router Purchase) which are added as lineItems alongside the recurring plan fee.
+### Initial Invoice Generation: The first invoice is generated automatically when a `Subscriber`'s status is changed to `Active` (specifically, from `Pending Installation` to `Active`). This ensures billing begins only when the service is live. The invoice includes the recurring fee from the `servicePlan` and any one-off charges that were added to the subscriber's record.
+
+### Subscriber Activation Event: When a subscriber's status changes from `Pending Installation` to `Active`, the system publishes a `subscriber.activated` event. This can be used by other services (like a communications module) to trigger welcome messages or other onboarding actions.
 
 ### Automated Billing Cycle: A scheduled job (CRON) runs daily:
 

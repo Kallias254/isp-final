@@ -1,4 +1,5 @@
 import { CollectionConfig } from 'payload/types';
+import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
 import { isAdminOrHasPermission } from '../utils/access';
 
 const Leads: CollectionConfig = {
@@ -62,6 +63,20 @@ const Leads: CollectionConfig = {
       required: true,
     },
     {
+      name: 'preferredPlan',
+      type: 'relationship',
+      relationTo: 'plans',
+      hasMany: false,
+    },
+    {
+      name: 'preferredBillingCycle',
+      type: 'select',
+      options: [
+        { label: 'Monthly', value: 'monthly' },
+        { label: 'Quarterly', value: 'quarterly' },
+      ],
+    },
+    {
       name: 'notes',
       type: 'richText',
     },
@@ -82,8 +97,8 @@ const Leads: CollectionConfig = {
               contactPhone: doc.subscriberPhone,
               email: `${doc.subscriberName.replace(/\s/g, '').toLowerCase()}@example.com`, // Generate a dummy email
               status: 'pending-installation',
-              servicePlan: null, // Will be set during provisioning
-              billingCycle: 'monthly', // Default to monthly
+              servicePlan: doc.preferredPlan, // Pass preferred plan
+              billingCycle: doc.preferredBillingCycle || 'monthly', // Pass preferred cycle or default to monthly
               nextDueDate: new Date().toISOString(), // Set to today for now
               accountBalance: 0,
               addressNotes: doc.notes,
@@ -118,6 +133,7 @@ const Leads: CollectionConfig = {
         return doc;
       },
     ],
+    afterDelete: [getAuditLogDeleteHook('leads')],
   },
 };
 

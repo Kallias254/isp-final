@@ -1,8 +1,9 @@
 import { CollectionConfig } from 'payload/types';
+import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
 import { isAdminOrHasPermission } from '../utils/access';
 
 const WorkOrders: CollectionConfig = {
-  slug: 'workOrders',
+  slug: 'work-orders',
   admin: {
     useAsTitle: 'orderType',
   },
@@ -50,7 +51,7 @@ const WorkOrders: CollectionConfig = {
     },
     {
       name: 'notes',
-      type: 'richText',
+      type: 'textarea',
     },
   ],
   hooks: {
@@ -166,6 +167,7 @@ const WorkOrders: CollectionConfig = {
         return doc;
       },
     ],
+    afterDelete: [getAuditLogDeleteHook('work-orders')],
   },
 };
 

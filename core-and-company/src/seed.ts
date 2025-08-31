@@ -1,6 +1,7 @@
 import payload from 'payload';
 import dotenv from 'dotenv';
 import path from 'path';
+import { Role, Plan, Subscriber, Invoice, Ticket, Expense } from './payload-types';
 
 dotenv.config({
   path: path.resolve(__dirname, '../.env'),
@@ -15,7 +16,6 @@ const seed = async () => {
     });
 
     payload.logger.info('Seeding data...');
-    console.log('Payload object after init:', payload); // Added for debugging
 
     // 1. Create Roles
     const adminRole = await payload.find({
@@ -35,7 +35,7 @@ const seed = async () => {
           name: 'Admin',
           permissions: [
             // Grant all permissions for Admin role
-            { collection: 'users', read: true, create: true, update: true, delete: true },
+            
             { collection: 'staff', read: true, create: true, update: true, delete: true },
             { collection: 'roles', read: true, create: true, update: true, delete: true },
             { collection: 'plans', read: true, create: true, update: true, delete: true },
@@ -92,6 +92,31 @@ const seed = async () => {
       payload.logger.info('Admin user already exists.');
     }
 
+    const testAdminUser = await payload.find({
+        collection: 'staff',
+        where: {
+            email: {
+                equals: 'testadmin@example.com',
+            },
+        },
+    });
+
+    if (testAdminUser.docs.length === 0) {
+        await payload.create({
+            collection: 'staff',
+            data: {
+                email: 'testadmin@example.com',
+                password: 'password',
+                fullName: 'Test Admin User',
+                status: 'active',
+                assignedRole: adminRoleId,
+            },
+        });
+        payload.logger.info('Test admin user created.');
+    } else {
+        payload.logger.info('Test admin user already exists.');
+    }
+
     // 3. Create Plans
     const monthlyPlan = await payload.create({
       collection: 'plans',
@@ -125,7 +150,7 @@ const seed = async () => {
       data: {
         firstName: 'John',
         lastName: 'Doe',
-        accountNumber: 'SUB001',
+        accountNumber: `SUB001-${Date.now()}`,
         mpesaNumber: '254712345678',
         contactPhone: '254712345678',
         email: 'john.doe@example.com',
@@ -135,7 +160,7 @@ const seed = async () => {
         nextDueDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString(),
         accountBalance: 0,
         deviceToken: 'test-device-token-john',
-        initialOneOffCharges: [], // Added required field
+        upfrontCharges: [], // Added required field
       },
     });
     payload.logger.info('Subscriber 1 created.');
@@ -145,7 +170,7 @@ const seed = async () => {
       data: {
         firstName: 'Jane',
         lastName: 'Smith',
-        accountNumber: 'SUB002',
+        accountNumber: `SUB002-${Date.now()}`,
         mpesaNumber: '254722334455',
         contactPhone: '254722334455',
         email: 'jane.smith@example.com',
@@ -155,7 +180,7 @@ const seed = async () => {
         nextDueDate: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(), // Overdue
         accountBalance: 4000, // Overdue amount
         deviceToken: 'test-device-token-jane',
-        initialOneOffCharges: [], // Added required field
+        upfrontCharges: [], // Added required field
       },
     });
     payload.logger.info('Subscriber 2 created (suspended).');
@@ -164,7 +189,7 @@ const seed = async () => {
     await payload.create({
       collection: 'invoices',
       data: {
-        invoiceNumber: 'INV-SUB001-001',
+        invoiceNumber: `INV-SUB001-001-${Date.now()}`,
         subscriber: subscriber1.id,
         amountDue: 1500,
         dueDate: new Date(new Date().setDate(new Date().getDate() + 15)).toISOString(),
@@ -179,7 +204,7 @@ const seed = async () => {
   await payload.create({
     collection: 'invoices',
     data: {
-      invoiceNumber: 'INV-SUB002-001',
+      invoiceNumber: `INV-SUB002-001-${Date.now()}`,
       subscriber: subscriber2.id,
       amountDue: 4000,
       dueDate: new Date(new Date().setDate(new Date().getDate() - 10)).toISOString(),
@@ -195,10 +220,19 @@ const seed = async () => {
   await payload.create({
     collection: 'tickets',
     data: {
-      ticketID: 'TKT001',
+      ticketID: `TKT001-${Date.now()}`,
       subscriber: subscriber1.id,
       subject: 'Internet intermittent',
-      description: 'Internet connection keeps dropping every few minutes.',
+      description: [
+        {
+          children: [
+            {
+              text: 'Internet connection keeps dropping every few minutes.',
+            },
+          ],
+          type: 'p',
+        },
+      ],
       status: 'open',
       priority: 'high',
     },
@@ -208,10 +242,19 @@ const seed = async () => {
   await payload.create({
     collection: 'tickets',
     data: {
-      ticketID: 'TKT002',
+      ticketID: `TKT002-${Date.now()}`,
       subscriber: subscriber2.id,
       subject: 'Cannot access certain websites',
-      description: 'Some websites are not loading, others are fine.',
+      description: [
+        {
+          children: [
+            {
+              text: 'Some websites are not loading, others are fine.',
+            },
+          ],
+          type: 'p',
+        },
+      ],
       status: 'in-progress',
       priority: 'medium',
     },

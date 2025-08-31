@@ -9,6 +9,93 @@ const billingCronEndpoint: Endpoint = {
     const payload: Payload = req.payload;
 
     try {
+      // --- 1. Handle "Trial Ending Soon" Notifications ---
+      const threeDaysFromNow = new Date();
+      threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+
+      const trialsEndingSoon = await payload.find({
+        collection: 'subscribers',
+        where: {
+          trialEndDate: {
+            equals: threeDaysFromNow.toISOString().split('T')[0], // Compare date part only
+          },
+        },
+      });
+
+      for (const subscriber of trialsEndingSoon.docs) {
+        payload.logger.info({
+          event: 'subscriber.trial.ending_soon',
+          subscriberId: subscriber.id,
+          message: `Event: Subscriber ${subscriber.accountNumber}'s trial is ending soon.`,
+        });
+        // TODO: Integrate with a real notification service
+      }
+
+      // --- 2. Handle Trial Expiry and First Recurring Invoice ---
+      const trialsEndingToday = await payload.find({
+        collection: 'subscribers',
+        where: {
+          and: [
+            {
+              nextDueDate: {
+                less_than_equal: new Date().toISOString(),
+              },
+            },
+            {
+              trialEndDate: {
+                exists: true,
+              },
+            },
+          ],
+        },
+        depth: 1,
+      });
+
+      for (const subscriber of trialsEndingToday.docs) {
+        const servicePlan = subscriber.servicePlan;
+        if (!servicePlan || typeof servicePlan !== 'object') continue;
+
+        // Generate their first recurring invoice
+        await payload.create({
+          collection: 'invoices',
+          data: {
+            invoiceNumber: `INV-${Date.now()}-${subscriber.accountNumber}`,
+            subscriber: subscriber.id,
+            amountDue: servicePlan.price,
+            dueDate: new Date().toISOString(),
+            status: 'unpaid',
+            lineItems: [{
+              description: `Service Plan: ${servicePlan.name} (${servicePlan.billingCycle})`,
+              quantity: 1,
+              price: servicePlan.price,
+            }],
+          },
+        });
+
+        // Calculate next due date
+        let newNextDueDate = new Date(subscriber.nextDueDate);
+        if (servicePlan.billingCycle === 'monthly') {
+          newNextDueDate = addMonths(newNextDueDate, 1);
+        } else if (servicePlan.billingCycle === 'quarterly') {
+          newNextDueDate = addQuarters(newNextDueDate, 1);
+        }
+
+        // Transition user from trial to standard by removing trialEndDate and setting next due date
+        await payload.update({
+          collection: 'subscribers',
+          id: subscriber.id,
+          data: {
+            trialEndDate: null,
+            nextDueDate: newNextDueDate.toISOString(),
+          },
+        });
+
+        payload.logger.info({
+          event: 'invoice.created',
+          subscriberId: subscriber.id,
+          message: `Event: First recurring invoice created for subscriber ${subscriber.accountNumber} after trial.`,
+        });
+      }
       // 1. Find all Subscribers whose nextDueDate is today and are not on an active trial.
       const subscribers = await payload.find({
         collection: 'subscribers',
@@ -133,7 +220,11 @@ const billingCronEndpoint: Endpoint = {
         });
         payload.logger.info(`Subscriber ${subscriber.id} suspended due to overdue invoice.`);
 
-        // TODO: Fire subscriber.suspended event for Operations module
+        payload.logger.info({
+          event: 'subscriber.suspended',
+          subscriberId: subscriber.id,
+          message: `Event: Subscriber ${subscriber.accountNumber} was suspended.`,
+        });
       }
 
       return res.status(200).json({ message: 'Automated billing cycle completed' });

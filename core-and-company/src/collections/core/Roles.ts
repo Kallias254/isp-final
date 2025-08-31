@@ -1,9 +1,14 @@
 import { CollectionConfig } from 'payload/types';
+import { getAuditLogHook, getAuditLogDeleteHook } from '../../hooks/auditLogHook';
 
 const Roles: CollectionConfig = {
   slug: 'roles',
   admin: {
     useAsTitle: 'name',
+  },
+  hooks: {
+    afterChange: [getAuditLogHook('roles')],
+    afterDelete: [getAuditLogDeleteHook('roles')],
   },
   access: {
     // TODO: Implement access control based on the new data-driven RBAC

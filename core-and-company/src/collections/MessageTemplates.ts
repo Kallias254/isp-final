@@ -1,10 +1,15 @@
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrHasPermission } from '../utils/access'
+import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook'
 
 const MessageTemplates: CollectionConfig = {
   slug: 'messageTemplates',
   admin: {
     useAsTitle: 'templateName',
+  },
+  hooks: {
+    afterChange: [getAuditLogHook('messageTemplates')],
+    afterDelete: [getAuditLogDeleteHook('messageTemplates')],
   },
   access: {
     read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'messageTemplates' }),

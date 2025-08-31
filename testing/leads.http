@@ -1,0 +1,43 @@
+# =============================================
+# LEADS WORKFLOW
+# =============================================
+
+###
+# Create a new lead
+POST http://localhost:3001/api/leads
+Content-Type: application/json
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+{
+  "status": "new",
+  "leadSource": "website",
+  "subscriberName": "John Doe",
+  "subscriberPhone": "254712345678",
+  "serviceLocation": "68b18daff0d98528e24b4648",
+  "notes": "This is a test lead."
+}
+
+###
+# Get all leads
+GET http://localhost:3001/api/leads
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+###
+# Get a single lead
+GET http://localhost:3001/api/leads/{{leadId}}
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+###
+# Update a lead
+PATCH http://localhost:3001/api/leads/{{leadId}}
+Content-Type: application/json
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+{
+  "status": "contacted"
+}
+
+###
+# Delete a lead
+DELETE http://localhost:3001/api/leads/{{leadId}}
+Authorization: Bearer {{adminLogin.response.body.token}}

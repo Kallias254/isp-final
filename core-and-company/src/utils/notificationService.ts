@@ -29,7 +29,7 @@ export const sendNotification = async ({ payload, recipient, type, content, trig
         payload.logger.info(`Title: ${title || 'N/A'}, Body: ${content}`);
 
         try {
-          externalServiceResponse = await axios.post('http://172.30.0.4:6000/send-notification', {
+          externalServiceResponse = await axios.post('http://notification-service:6000/send-notification', {
             deviceToken,
             title: title || 'Notification',
             body: content,

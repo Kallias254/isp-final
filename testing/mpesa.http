@@ -12,7 +12,7 @@
 ###
 # 1. Initiate STK Push Payment
 # This calls the main Payload app, which in turn calls the external mpesa-service.
-POST http://localhost:3000/api/mpesa-initiate-payment
+POST http://localhost:3001/api/mpesa-initiate-payment
 Content-Type: application/json
 Authorization: Bearer {{adminLogin.response.body.token}}
 
@@ -47,17 +47,17 @@ Content-Type: application/json
 
 ###
 # Get All Subscribers
-GET http://localhost:3000/api/subscribers
+GET http://localhost:3001/api/subscribers
 Authorization: Bearer {{adminLogin.response.body.token}}
 
 ###
 # Get All Invoices
-GET http://localhost:3000/api/invoices
+GET http://localhost:3001/api/invoices
 Authorization: Bearer {{adminLogin.response.body.token}}
 
 ###
 # Get All Payments
-GET http://localhost:3000/api/payments
+GET http://localhost:3001/api/payments
 Authorization: Bearer {{adminLogin.response.body.token}}
 
 
@@ -73,7 +73,7 @@ Authorization: Bearer {{adminLogin.response.body.token}}
 ###
 # Test 1: Partial Payment (500 KES) for INV-SUB001-001
 # Expected: Invoice 1 becomes partially-paid (1000 due). accountBalance becomes -500.
-POST http://localhost:3000/api/mpesa-initiate-payment
+POST http://localhost:3001/api/mpesa-initiate-payment
 Content-Type: application/json
 Authorization: Bearer {{adminLogin.response.body.token}}
 
@@ -87,7 +87,7 @@ Authorization: Bearer {{adminLogin.response.body.token}}
 ###
 # Test 2: Full Payment of Remaining Balance (1000 KES) for INV-SUB001-001
 # Expected: Invoice 1 becomes paid (0 due). accountBalance becomes -1500.
-POST http://localhost:3000/api/mpesa-initiate-payment
+POST http://localhost:3001/api/mpesa-initiate-payment
 Content-Type: application/json
 Authorization: Bearer {{adminLogin.response.body.token}}
 
@@ -101,7 +101,7 @@ Authorization: Bearer {{adminLogin.response.body.token}}
 ###
 # Test 3: Overpayment (2000 KES) for INV-1756466607517
 # Expected: Invoice 2 becomes paid (0 due). accountBalance becomes -3500.
-POST http://localhost:3000/api/mpesa-initiate-payment
+POST http://localhost:3001/api/mpesa-initiate-payment
 Content-Type: application/json
 Authorization: Bearer {{adminLogin.response.body.token}}
 
@@ -115,7 +115,7 @@ Authorization: Bearer {{adminLogin.response.body.token}}
 ###
 # Test 4: Advance Payment (1000 KES) - No open invoices
 # Expected: accountBalance becomes -4500. No invoice status changes.
-POST http://localhost:3000/api/mpesa-initiate-payment
+POST http://localhost:3001/api/mpesa-initiate-payment
 Content-Type: application/json
 Authorization: Bearer {{adminLogin.response.body.token}}
 

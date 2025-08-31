@@ -1,0 +1,42 @@
+# =============================================
+# WORK ORDERS WORKFLOW
+# =============================================
+
+###
+# Create a new work order
+POST http://localhost:3001/api/work-orders
+Content-Type: application/json
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+{
+  "subscriber": "68b18daff0d98528e24b4648",
+  "orderType": "new-installation",
+  "status": "pending",
+  "scheduledDate": "2025-10-01",
+  "notes": "This is a test work order."
+}
+
+###
+# Get all work orders
+GET http://localhost:3001/api/work-orders
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+###
+# Get a single work order
+GET http://localhost:3001/api/work-orders/{{workOrderId}}
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+###
+# Update a work order
+PATCH http://localhost:3001/api/work-orders/{{workOrderId}}
+Content-Type: application/json
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+{
+  "status": "completed"
+}
+
+###
+# Delete a work order
+DELETE http://localhost:3001/api/work-orders/{{workOrderId}}
+Authorization: Bearer {{adminLogin.response.body.token}}

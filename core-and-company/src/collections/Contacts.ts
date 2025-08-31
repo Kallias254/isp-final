@@ -1,10 +1,15 @@
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrHasPermission } from '../utils/access'
+import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook'
 
 const Contacts: CollectionConfig = {
   slug: 'contacts',
   admin: {
     useAsTitle: 'phoneNumber',
+  },
+  hooks: {
+    afterChange: [getAuditLogHook('contacts')],
+    afterDelete: [getAuditLogDeleteHook('contacts')],
   },
   access: {
     read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'contacts' }),

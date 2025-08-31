@@ -1,5 +1,20 @@
 import { AccessArgs } from 'payload/config';
-import { User, Staff } from '../payload-types'; // Import Staff type
+import { Staff } from '../payload-types';
+
+export const isAdmin = ({ req }): boolean => {
+  const user = req.user as Staff | undefined;
+
+  if (!user) {
+    return false;
+  }
+
+  // This check assumes a simple 'admin' role name. Adjust if your admin check is different.
+  if (user.assignedRole && typeof user.assignedRole === 'object' && user.assignedRole.name === 'Admin') {
+    return true;
+  }
+
+  return false;
+}
 
 interface HasPermissionArgs extends AccessArgs {
   action: 'read' | 'create' | 'update' | 'delete';
@@ -7,6 +22,7 @@ interface HasPermissionArgs extends AccessArgs {
 }
 
 export const isAdminOrHasPermission = async ({ req, action, collection }: HasPermissionArgs): Promise<boolean> => {
+  console.log(`Checking permission for user: ${req.user}, action: ${action}, collection: ${collection}`);
   const user = req.user as Staff | undefined; // Cast user to Staff type
 
   // If user is not logged in, deny access

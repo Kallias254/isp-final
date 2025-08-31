@@ -1,0 +1,51 @@
+# =============================================
+# SUBSCRIBERS WORKFLOW
+# =============================================
+
+###
+# Create a new subscriber
+POST http://localhost:3001/api/subscribers
+Content-Type: application/json
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+{
+  "firstName": "Jane",
+  "lastName": "Doe",
+  "accountNumber": "ACC-12345",
+  "mpesaNumber": "254712345678",
+  "contactPhone": "254712345678",
+  "email": "jane.doe@example.com",
+  "status": "active",
+  "servicePlan": "68b18daff0d98528e24b4668",
+  "billingCycle": "monthly",
+  "nextDueDate": "2025-09-30",
+  "accountBalance": 0,
+  "addressNotes": "This is a test subscriber.",
+  "connectionType": "ftth",
+  "assignedIp": "192.168.1.100"
+}
+
+###
+# Get all subscribers
+GET http://localhost:3001/api/subscribers
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+###
+# Get a single subscriber
+GET http://localhost:3001/api/subscribers/{{subscriberId}}
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+###
+# Update a subscriber
+PATCH http://localhost:3001/api/subscribers/{{subscriberId}}
+Content-Type: application/json
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+{
+  "status": "suspended"
+}
+
+###
+# Delete a subscriber
+DELETE http://localhost:3001/api/subscribers/{{subscriberId}}
+Authorization: Bearer {{adminLogin.response.body.token}}

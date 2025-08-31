@@ -29,21 +29,24 @@ export async function loginAction(
     return { ok: false, fieldErrors: errors, message: "Please fix the errors and try again." }
   }
 
+  console.log(`Attempting login for email: ${email}`);
+  console.log(`Payload API URL: ${PAYLOAD_API_URL}`);
+
   try {
+    debugger;
     const res = await fetch(`${PAYLOAD_API_URL}/api/staff/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     })
+    const data = await res.json();
+    console.log(data);
 
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}))
-      // Payload CMS often sends errors in an `errors` array
-      const message = errorData.errors?.[0]?.message || "Invalid email or password."
+      console.error(data);
+      const message = data.errors?.[0]?.message || "Invalid email or password."
       return { ok: false, message }
     }
-
-    const data = await res.json()
 
     // Payload sends the token in a cookie, so we need to extract and set it.
     const resCookies = res.headers.get("set-cookie")

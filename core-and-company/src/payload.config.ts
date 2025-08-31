@@ -43,6 +43,8 @@ import sendBulkMessageEndpoint from './endpoints/sendBulkMessageEndpoint';
 import { payloadCloud } from '@payloadcms/plugin-cloud';
 import BeforeDashboard from './components/BeforeDashboard';
 
+import helloEndpoint from './endpoints/hello';
+
 export default buildConfig({
   cors: ['http://localhost:3002'],
   admin: {
@@ -60,6 +62,7 @@ export default buildConfig({
     zabbixWebhookEndpoint,
     sendManualMessageEndpoint,
     sendBulkMessageEndpoint,
+    helloEndpoint,
   ],
   collections: [
     AuditLogs,

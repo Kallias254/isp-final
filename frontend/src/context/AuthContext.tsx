@@ -1,11 +1,11 @@
-'''use client';
+'use client';
 
 import React, { createContext, useState, ReactNode } from 'react';
-import { User } from '../../../payload-types';
+import { Staff } from '../../../payload-types';
 
 interface IAuthContext {
-  user: User | null;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  user: Staff | null;
+  setUser: React.Dispatch<React.SetStateAction<Staff | null>>;
 }
 
 export const AuthContext = createContext<IAuthContext>({
@@ -14,7 +14,17 @@ export const AuthContext = createContext<IAuthContext>({
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const mockUser: Staff = {
+    id: 'mock-user-id',
+    fullName: 'Mock User',
+    email: 'mock@example.com',
+    assignedRole: { id: 'mock-role-id', name: 'Admin', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+    status: 'active',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  const [user, setUser] = useState<Staff | null>(mockUser);
 
   return (
     <AuthContext.Provider value={{ user, setUser }}>
@@ -22,4 +32,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     </AuthContext.Provider>
   );
 };
-'''

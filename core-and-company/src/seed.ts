@@ -117,6 +117,31 @@ const seed = async () => {
         payload.logger.info('Test admin user already exists.');
     }
 
+    const testAdminUser2 = await payload.find({
+        collection: 'staff',
+        where: {
+            email: {
+                equals: 'testadmin2@example.com',
+            },
+        },
+    });
+
+    if (testAdminUser2.docs.length === 0) {
+        await payload.create({
+            collection: 'staff',
+            data: {
+                email: 'testadmin2@example.com',
+                password: 'newpassword',
+                fullName: 'Test Admin User 2',
+                status: 'active',
+                assignedRole: adminRoleId,
+            },
+        });
+        payload.logger.info('Test admin user 2 created.');
+    } else {
+        payload.logger.info('Test admin user 2 already exists.');
+    }
+
     // 3. Create Plans
     const monthlyPlan = await payload.create({
       collection: 'plans',

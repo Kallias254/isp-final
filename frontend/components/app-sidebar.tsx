@@ -2,36 +2,38 @@
 
 import * as React from "react"
 import {
-  IconCamera,
-  IconChartBar,
-  IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
-  IconHelp,
-  IconInnerShadowTop,
-  IconListDetails,
-  IconReport,
-  IconSearch,
-  IconSettings,
-  IconUsers,
-} from "@tabler/icons-react"
+  Home,
+  Users,
+  Receipt,
+  Globe,
+  Headset,
+  Shield,
+  BarChart,
+  AudioWaveform,
+  BookOpen,
+  Bot,
+  Command,
+  Frame,
+  GalleryVerticalEnd,
+  Map,
+  PieChart,
+  Settings2,
+  SquareTerminal,
+  Handshake,
+  FileText,
+  Network,
+} from "lucide-react"
 
-import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarRail,
 } from "@/components/ui/sidebar"
+import { Separator } from "./ui/separator"
 
 const data = {
   user: {
@@ -42,140 +44,166 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
-      icon: IconDashboard,
+      url: "/dashboard",
+      icon: Home,
     },
     {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
+      title: "CRM & Sales",
+      url: "/dashboard/crm",
+      icon: Handshake,
       items: [
         {
-          title: "Active Proposals",
-          url: "#",
+          title: "Subscribers",
+          url: "/dashboard/crm/subscribers",
         },
         {
-          title: "Archived",
-          url: "#",
+          title: "Leads",
+          url: "/dashboard/crm/leads",
+        },
+        {
+          title: "Buildings",
+          url: "/dashboard/crm/buildings",
+        },
+        {
+          title: "Partners",
+          url: "/dashboard/crm/partners",
         },
       ],
     },
     {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
+      title: "Billing & Finance",
+      url: "/dashboard/billing",
+      icon: FileText,
       items: [
         {
-          title: "Active Proposals",
-          url: "#",
+          title: "Invoices",
+          url: "/dashboard/billing/invoices",
         },
         {
-          title: "Archived",
-          url: "#",
+          title: "Payments",
+          url: "/dashboard/billing/payments",
+        },
+        {
+          title: "Expenses",
+          url: "/dashboard/billing/expenses",
         },
       ],
     },
     {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
+      title: "Operations & NOC",
+      url: "/dashboard/operations",
+      icon: Network,
       items: [
         {
-          title: "Active Proposals",
-          url: "#",
+          title: "Work Orders",
+          url: "/dashboard/operations/work-orders",
         },
         {
-          title: "Archived",
-          url: "#",
+          title: "Inventory (Resources)",
+          url: "/dashboard/operations/resources",
+        },
+        {
+          title: "IP Manager (IPAM)",
+          url: "/dashboard/operations/ipam",
+        },
+      ],
+    },
+    {
+      title: "Support & Comms",
+      url: "/dashboard/support",
+      icon: Headset,
+      items: [
+        {
+          title: "Tickets",
+          url: "/dashboard/support/tickets",
+        },
+        {
+          title: "Communications (Messages)",
+          url: "/dashboard/support/messages",
+        },
+        {
+          title: "Templates",
+          url: "/dashboard/support/templates",
         },
       ],
     },
   ],
   navSecondary: [
     {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
+      title: "System & Auditing",
+      url: "/dashboard/system",
+      icon: Shield,
+      items: [
+        {
+          title: "Staff Management",
+          url: "/dashboard/system/staff",
+        },
+        {
+          title: "Audit Logs",
+          url: "/dashboard/system/audit-logs",
+        },
+        {
+          title: "API Keys",
+          url: "/dashboard/system/api-keys",
+        },
+      ],
     },
     {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
+      title: "Reporting",
+      url: "/dashboard/reporting",
+      icon: BarChart,
+      items: [
+        {
+          title: "Financial Reports",
+          url: "/dashboard/reporting/financial",
+        },
+        {
+          title: "Customer Reports",
+          url: "/dashboard/reporting/customer",
+        },
+        {
+          title: "Operations Reports",
+          url: "/dashboard/reporting/operations",
+        },
+      ],
     },
   ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
-              <a href="#">
-                <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain title="Main" items={data.navMain} />
+        <Separator className="my-4" />
+        <NavMain title="System" items={data.navSecondary} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
       </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
+  )
+}
+
+export function AppSidebarRail({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
+  return (
+    <Sidebar collapsible="icon" {...props}>
+      <SidebarHeader>
+      </SidebarHeader>
+      <SidebarContent>
+        <NavMain title="Main" items={data.navMain} isCollapsed />
+        <Separator className="my-4" />
+        <NavMain title="System" items={data.navSecondary} isCollapsed />
+      </SidebarContent>
+      <SidebarFooter>
+        <NavUser user={data.user} isCollapsed />
+      </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   )
 }

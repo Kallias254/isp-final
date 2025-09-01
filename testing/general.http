@@ -9,6 +9,6 @@ POST http://localhost:3001/api/staff/login
 Content-Type: application/json
 
 {
-  "email": "admin@example.com",
+  "email": "testadmin@example.com",
   "password": "password"
 }

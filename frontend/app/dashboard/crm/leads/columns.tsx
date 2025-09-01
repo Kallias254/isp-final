@@ -1,0 +1,106 @@
+"use client"
+
+import { ColumnDef } from "@tanstack/react-table"
+import { Lead } from "@/payload-types"
+import Link from "next/link"
+import { MoreHorizontal } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Badge } from "@/components/ui/badge"
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "new":
+      return "bg-blue-500 hover:bg-blue-600"
+    case "contacted":
+      return "bg-cyan-500 hover:bg-cyan-600"
+    case "site-survey":
+      return "bg-purple-500 hover:bg-purple-600"
+    case "converted":
+      return "bg-green-500 hover:bg-green-600"
+    case "lost":
+      return "bg-red-500 hover:bg-red-600"
+    default:
+      return "bg-gray-500"
+  }
+}
+
+export const columns: ColumnDef<Lead>[] = [
+  {
+    accessorKey: "subscriberName",
+    header: "Subscriber Name",
+    cell: ({ row }) => {
+      const { id, subscriberName } = row.original
+      return (
+        <Link href={`/dashboard/crm/leads/${id}`} className="text-blue-500 hover:underline">
+          {subscriberName}
+        </Link>
+      )
+    },
+  },
+  {
+    accessorKey: "subscriberPhone",
+    header: "Subscriber Phone",
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.original.status
+      return <Badge className={getStatusColor(status)}>{status}</Badge>
+    },
+  },
+  {
+    accessorKey: "leadSource",
+    header: "Lead Source",
+  },
+  {
+    accessorKey: "serviceLocation",
+    header: "Service Location",
+    cell: ({ row }) => {
+      const location = row.original.serviceLocation
+      if (typeof location === 'object' && location !== null) {
+        if (typeof location.building === 'object' && location.building !== null) {
+            return `${location.building.name} - ${location.unitNumber}`
+        }
+        return location.unitNumber
+      }
+      return location
+    },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const lead = row.original
+ 
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => navigator.clipboard.writeText(lead.id)}
+            >
+              Copy lead ID
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>View lead</DropdownMenuItem>
+            <DropdownMenuItem>Convert to subscriber</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    },
+  },
+]

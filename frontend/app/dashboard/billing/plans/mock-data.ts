@@ -1,0 +1,43 @@
+import { Plan } from "@/payload-types"
+
+export const plans: Plan[] = [
+  {
+    id: "1",
+    name: "Basic",
+    downloadSpeed: 10,
+    uploadSpeed: 5,
+    price: 1000,
+    billingCycle: "monthly",
+    ipAssignmentType: "dynamic",
+    planEnabled: true,
+    activeForNewSignups: true,
+    createdAt: "",
+    updatedAt: "",
+  },
+  {
+    id: "2",
+    name: "Premium",
+    downloadSpeed: 50,
+    uploadSpeed: 25,
+    price: 3000,
+    billingCycle: "monthly",
+    ipAssignmentType: "dynamic",
+    planEnabled: true,
+    activeForNewSignups: true,
+    createdAt: "",
+    updatedAt: "",
+  },
+  {
+    id: "3",
+    name: "Business",
+    downloadSpeed: 100,
+    uploadSpeed: 50,
+    price: 5000,
+    billingCycle: "quarterly",
+    ipAssignmentType: "static-public",
+    planEnabled: true,
+    activeForNewSignups: true,
+    createdAt: "",
+    updatedAt: "",
+  },
+]

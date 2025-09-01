@@ -31,6 +31,7 @@ const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
+const SIDEBAR_OPEN_SECTIONS_STORAGE_KEY = "sidebar_open_sections"
 
 type SidebarContextProps = {
   state: "expanded" | "collapsed"
@@ -40,6 +41,8 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
   toggleSidebar: () => void
+  openSections: string[]
+  setOpenSections: React.Dispatch<React.SetStateAction<string[]>>
 }
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null)
@@ -68,6 +71,13 @@ function SidebarProvider({
 }) {
   const isMobile = useIsMobile()
   const [openMobile, setOpenMobile] = React.useState(false)
+  const [openSections, setOpenSections] = React.useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+        const savedOpenSections = localStorage.getItem(SIDEBAR_OPEN_SECTIONS_STORAGE_KEY)
+        return savedOpenSections ? JSON.parse(savedOpenSections) : []
+    }
+    return []
+  })
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
@@ -109,6 +119,10 @@ function SidebarProvider({
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [toggleSidebar])
 
+  React.useEffect(() => {
+    localStorage.setItem(SIDEBAR_OPEN_SECTIONS_STORAGE_KEY, JSON.stringify(openSections))
+  }, [openSections])
+
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
   const state = open ? "expanded" : "collapsed"
@@ -122,8 +136,10 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
+      openSections,
+      setOpenSections,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
+    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar, openSections, setOpenSections]
   )
 
   return (

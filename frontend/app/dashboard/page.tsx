@@ -1,52 +1,40 @@
-import { CardsRow } from "@/components/dashboard/kpis"
-import RevenueAreaChart from "@/components/dashboard/revenue-area-chart"
-import SubscribersBarChart from "@/components/dashboard/subscribers-bar-chart"
-import TicketsDonut from "@/components/dashboard/tickets-donut"
-import SmsCreditsWidget from "@/components/dashboard/sms-credits-widget"
-import RecentActivity from "@/components/dashboard/recent-activity"
-import { getKpis, getMonthlySeries, type MonthDatum } from "@/components/dashboard/data"
+import { AppSidebar } from "../../components/app-sidebar"
+import { ChartAreaInteractive } from "../../components/chart-area-interactive"
+import { DataTable } from "../../components/data-table"
+import { SectionCards } from "../../components/section-cards"
+import { SiteHeader } from "../../components/site-header"
+import {
+  SidebarInset,
+  SidebarProvider,
+} from "../../components/ui/sidebar"
 
-export default async function Page() {
-  // Build one consistent series on the server and pass to children
-  const series: MonthDatum[] = getMonthlySeries()
-  const { activeSubscribers, mrr, mrrDelta, churnRate, openTickets } = getKpis(series)
+import data from "../../data.json"
 
+export default function Page() {
   return (
-    <div className="mx-auto w-full max-w-screen-2xl 2xl:max-w-[1800px] px-2 sm:px-4 md:px-6 space-y-4 sm:space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg sm:text-xl font-semibold">Overview</h2>
-        <span className="text-xs text-muted-foreground">{new Date().toLocaleDateString()}</span>
-      </div>
-
-      <CardsRow
-        activeSubscribers={activeSubscribers}
-        mrr={mrr}
-        mrrDelta={mrrDelta}
-        churnRate={churnRate}
-        openTickets={openTickets}
-      />
-
-      {/* Charts row */}
-      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
-        <RevenueAreaChart data={series} />
-        <SubscribersBarChart data={series} />
-      </div>
-
-      {/* Activity + right rail */}
-      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <RecentActivity />
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "calc(var(--spacing) * 72)",
+          "--header-height": "calc(var(--spacing) * 12)",
+        } as React.CSSProperties
+      }
+    >
+      <AppSidebar variant="inset" />
+      <SidebarInset>
+        <SiteHeader />
+        <div className="flex flex-1 flex-col">
+          <div className="@container/main flex flex-1 flex-col gap-2">
+            <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+              <SectionCards />
+              <div className="px-4 lg:px-6">
+                <ChartAreaInteractive />
+              </div>
+              <DataTable data={data} />
+            </div>
+          </div>
         </div>
-        <div className="space-y-4 sm:space-y-6">
-          <TicketsDonut />
-          <SmsCreditsWidget />
-        </div>
-      </div>
-
-      <div className="mt-6 sm:mt-10 flex flex-col sm:flex-row items-center justify-between text-xs text-muted-foreground gap-2">
-        <p>{"© 2025. Your Company Name. All Rights Reserved."}</p>
-        <p>{"Created by: Your Name/Company"}</p>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

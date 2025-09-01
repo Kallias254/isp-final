@@ -6,8 +6,8 @@ import Link from "next/link";
 
 import { Input } from "@/components/ui/input";
 import { DataTable } from "@/components/data-table";
-import { columns, Invoice } from "./columns";
-import { invoices } from "./mock-data";
+import { columns, Payment } from "./columns";
+import { payments } from "./mock-data";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,14 +20,14 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { IconLayoutColumns, IconChevronDown } from "@tabler/icons-react";
 
-const CustomToolbar = (table: Table<Invoice>) => (
+const CustomToolbar = (table: Table<Payment>) => (
     <div className="flex items-center justify-between py-4">
         <div className="flex items-center gap-2">
             <Input
-            placeholder="Filter by subscriber..."
-            value={(table.getColumn("subscriber.name")?.getFilterValue() as string) ?? ""}
+            placeholder="Filter by payment reference..."
+            value={(table.getColumn("paymentReference")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
-                table.getColumn("subscriber.name")?.setFilterValue(event.target.value)
+                table.getColumn("paymentReference")?.setFilterValue(event.target.value)
             }
             className="max-w-sm"
             />
@@ -68,7 +68,7 @@ const CustomToolbar = (table: Table<Invoice>) => (
     </div>
 )
 
-export default function InvoicesPage() {
+export default function PaymentsPage() {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -89,22 +89,22 @@ export default function InvoicesPage() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                    <BreadcrumbPage>Invoices</BreadcrumbPage>
+                    <BreadcrumbPage>Payments</BreadcrumbPage>
                 </BreadcrumbItem>
             </BreadcrumbList>
         </Breadcrumb>
         <div className="flex items-center justify-between my-4">
             <div>
-                <h1 className="text-2xl font-bold">Invoices</h1>
-                <p className="text-muted-foreground">Manage all invoices in the system.</p>
+                <h1 className="text-2xl font-bold">Payments</h1>
+                <p className="text-muted-foreground">Manage all payments in the system.</p>
             </div>
-            <Link href="/dashboard/billing/invoices/new">
-                <Button>Add New Invoice</Button>
+            <Link href="/dashboard/billing/payments/new">
+                <Button>Add New Payment</Button>
             </Link>
         </div>
       <DataTable
         columns={columns}
-        data={invoices}
+        data={payments}
         toolbar={CustomToolbar}
         sorting={sorting}
         setSorting={setSorting}

@@ -1,0 +1,42 @@
+export const expenses = [
+  {
+    id: "1",
+    expenseDate: "2025-09-01",
+    category: "Equipment",
+    vendor: "Router Supplier",
+    amount: 5000,
+    description: "Purchase of 10 new routers",
+  },
+  {
+    id: "2",
+    expenseDate: "2025-09-02",
+    category: "Salaries",
+    vendor: "",
+    amount: 15000,
+    description: "August Salaries",
+  },
+  {
+    id: "3",
+    expenseDate: "2025-09-03",
+    category: "Rent",
+    vendor: "Landlord",
+    amount: 10000,
+    description: "Office Rent",
+  },
+  {
+    id: "4",
+    expenseDate: "2025-09-04",
+    category: "Bandwidth",
+    vendor: "ISP Provider",
+    amount: 8000,
+    description: "Monthly bandwidth charges",
+  },
+  {
+    id: "5",
+    expenseDate: "2025-09-05",
+    category: "Marketing",
+    vendor: "Facebook",
+    amount: 2000,
+    description: "Social media campaign",
+  },
+];

@@ -1,4 +1,4 @@
-import { Subscriber } from "@/payload-types"
+import { Subscriber } from "../../../../../payload-types"
 
 export const subscribers: Subscriber[] = [
   {

@@ -1,0 +1,70 @@
+export const resources = [
+  {
+    id: "1",
+    resourceName: "Router-001",
+    resourceType: "Router",
+    serialNumber: "SN-R-001",
+    macAddress: "00:1B:44:11:3A:B7",
+    status: "Deployed",
+    assignedTo: {
+      relationTo: "subscribers",
+      value: {
+        id: "1",
+        name: "John Doe",
+      },
+    },
+    location: {
+      id: "1",
+      name: "Building A",
+    },
+  },
+  {
+    id: "2",
+    resourceName: "Antenna-001",
+    resourceType: "Antenna",
+    serialNumber: "SN-A-001",
+    macAddress: "00:1B:44:11:3A:B8",
+    status: "In Stock",
+    assignedTo: null,
+    location: {
+      id: "2",
+      name: "Building B",
+    },
+  },
+  {
+    id: "3",
+    resourceName: "Switch-001",
+    resourceType: "Switch",
+    serialNumber: "SN-S-001",
+    macAddress: "00:1B:44:11:3A:B9",
+    status: "Faulty",
+    assignedTo: null,
+    location: {
+      id: "1",
+      name: "Building A",
+    },
+  },
+  {
+    id: "4",
+    resourceName: "Cable-001",
+    resourceType: "Cable",
+    serialNumber: "SN-C-001",
+    macAddress: "",
+    status: "Retired",
+    assignedTo: null,
+    location: null,
+  },
+  {
+    id: "5",
+    resourceName: "Router-002",
+    resourceType: "Router",
+    serialNumber: "SN-R-002",
+    macAddress: "00:1B:44:11:3A:BA",
+    status: "In Stock",
+    assignedTo: null,
+    location: {
+      id: "3",
+      name: "Building C",
+    },
+  },
+];

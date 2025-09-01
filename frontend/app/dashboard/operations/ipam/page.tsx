@@ -6,8 +6,8 @@ import Link from "next/link";
 
 import { Input } from "@/components/ui/input";
 import { DataTable } from "@/components/data-table";
-import { columns, Invoice } from "./columns";
-import { invoices } from "./mock-data";
+import { columns, Subnet } from "./columns";
+import { ipSubnets } from "./mock-data";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,14 +20,14 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { IconLayoutColumns, IconChevronDown } from "@tabler/icons-react";
 
-const CustomToolbar = (table: Table<Invoice>) => (
+const CustomToolbar = (table: Table<Subnet>) => (
     <div className="flex items-center justify-between py-4">
         <div className="flex items-center gap-2">
             <Input
-            placeholder="Filter by subscriber..."
-            value={(table.getColumn("subscriber.name")?.getFilterValue() as string) ?? ""}
+            placeholder="Filter by network..."
+            value={(table.getColumn("network")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
-                table.getColumn("subscriber.name")?.setFilterValue(event.target.value)
+                table.getColumn("network")?.setFilterValue(event.target.value)
             }
             className="max-w-sm"
             />
@@ -68,7 +68,7 @@ const CustomToolbar = (table: Table<Invoice>) => (
     </div>
 )
 
-export default function InvoicesPage() {
+export default function IpSubnetsPage() {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -85,26 +85,26 @@ export default function InvoicesPage() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                    <BreadcrumbLink href="/dashboard/billing">Billing</BreadcrumbLink>
+                    <BreadcrumbLink href="/dashboard/operations">Operations</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                    <BreadcrumbPage>Invoices</BreadcrumbPage>
+                    <BreadcrumbPage>IP Manager (IPAM)</BreadcrumbPage>
                 </BreadcrumbItem>
             </BreadcrumbList>
         </Breadcrumb>
         <div className="flex items-center justify-between my-4">
             <div>
-                <h1 className="text-2xl font-bold">Invoices</h1>
-                <p className="text-muted-foreground">Manage all invoices in the system.</p>
+                <h1 className="text-2xl font-bold">IP Manager (IPAM)</h1>
+                <p className="text-muted-foreground">Manage all IP subnets in the system.</p>
             </div>
-            <Link href="/dashboard/billing/invoices/new">
-                <Button>Add New Invoice</Button>
+            <Link href="/dashboard/operations/ipam/new">
+                <Button>Add New Subnet</Button>
             </Link>
         </div>
       <DataTable
         columns={columns}
-        data={invoices}
+        data={ipSubnets}
         toolbar={CustomToolbar}
         sorting={sorting}
         setSorting={setSorting}

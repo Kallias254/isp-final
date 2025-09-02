@@ -57,10 +57,6 @@ export const sendNotification = async ({ payload, recipient, type, content, trig
     }
 
     // Log action in Messages collection
-    if (!ispOwner) {
-      payload.logger.error('ispOwner is required to send a notification');
-      return;
-    }
     const messageData = {
       recipient,
       type,

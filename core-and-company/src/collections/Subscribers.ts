@@ -237,9 +237,9 @@ const Subscribers: CollectionConfig = {
     ],
     afterChange: [
       // On create, if it's a trial signup with upfront charges, create an invoice for those charges
-      async ({ req, doc, operation }) => {
+      async ({ doc, operation, req }) => {
+        const { payload } = req as any;
         if (operation === 'create' && doc.trialDays > 0 && doc.upfrontCharges && doc.upfrontCharges.length > 0) {
-          const { payload } = req;
           const { upfrontCharges, id: subscriberId } = doc;
 
           let totalUpfrontAmount = 0;
@@ -261,3 +261,10 @@ const Subscribers: CollectionConfig = {
             },
           });
           payload.logger.info(`Upfront charges invoice created for new trial subscriber ${subscriberId}.`);
+        }
+      },
+    ],
+  },
+};
+
+export default Subscribers;

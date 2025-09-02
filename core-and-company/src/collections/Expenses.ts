@@ -78,6 +78,7 @@ const Expenses: CollectionConfig = {
         name: 'ispOwner',
         type: 'relationship',
         relationTo: 'companies',
+        required: true,
     },
   ],
 };

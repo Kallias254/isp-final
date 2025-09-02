@@ -11,6 +11,12 @@ const ServiceLocations: CollectionConfig = {
       type: 'text',
       required: true,
     },
+    {
+      name: 'ispOwner',
+      type: 'relationship',
+      relationTo: 'companies',
+      required: true,
+    },
   ],
 };
 

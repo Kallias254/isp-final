@@ -16,6 +16,7 @@ interface SendNotificationArgs {
 }
 
 export const sendNotification = async ({ payload, recipient, type, content, triggerEvent, sentBy, bulkSend, deviceToken, title, data, ispOwner }: SendNotificationArgs) => {
+  console.log('ispOwner in sendNotification', ispOwner);
   try {
     let status: 'sent' | 'failed' = 'sent';
     let externalServiceResponse: any;

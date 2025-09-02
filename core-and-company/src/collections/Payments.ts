@@ -9,10 +9,10 @@ const Payments: CollectionConfig = {
     useAsTitle: 'paymentReference',
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'payments' }),
-    create: ({ req }) => isAdminOrHasPermission({ req, action: 'create', collection: 'payments' }),
-    update: ({ req }) => isAdminOrHasPermission({ req, action: 'update', collection: 'payments' }),
-    delete: ({ req }) => isAdminOrHasPermission({ req, action: 'delete', collection: 'payments' }),
+    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'payments'),
+    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'payments'),
+    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'payments'),
+    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'payments'),
   },
   fields: [
     {
@@ -51,6 +51,12 @@ const Payments: CollectionConfig = {
           pickerAppearance: 'dayOnly',
         },
       },
+    },
+    {
+      name: 'ispOwner',
+      type: 'relationship',
+      relationTo: 'companies',
+      required: true,
     },
   ],
   hooks: {
@@ -103,6 +109,7 @@ const Payments: CollectionConfig = {
                 invoiceId: invoice.id,
                 subscriberId: subscriber.id,
               },
+              ispOwner: typeof subscriber.ispOwner === 'object' ? subscriber.ispOwner.id : subscriber.ispOwner, // Assign ispOwner from the Subscriber
             });
             payload.logger.info(`Push notification sent for payment ${doc.id} (event: payment.received)`);
           } else {
@@ -153,6 +160,7 @@ const Payments: CollectionConfig = {
                 data: {
                   subscriberId: subscriber.id,
                 },
+                ispOwner: typeof subscriber.ispOwner === 'object' ? subscriber.ispOwner.id : subscriber.ispOwner, // Assign ispOwner from the Subscriber
               });
               payload.logger.info(`Push notification sent for subscriber ${subscriber.id} (event: subscriber.reconnected)`);
             } else {

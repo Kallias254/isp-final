@@ -12,10 +12,10 @@ const BuildingUnits: CollectionConfig = {
     afterDelete: [getAuditLogDeleteHook('buildingUnits')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'buildingUnits' }),
-    create: ({ req }) => isAdminOrHasPermission({ req, action: 'create', collection: 'buildingUnits' }),
-    update: ({ req }) => isAdminOrHasPermission({ req, action: 'update', collection: 'buildingUnits' }),
-    delete: ({ req }) => isAdminOrHasPermission({ req, action: 'delete', collection: 'buildingUnits' }),
+    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'building-units'),
+    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'building-units'),
+    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'building-units'),
+    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'building-units'),
   },
   fields: [
     {
@@ -57,6 +57,12 @@ const BuildingUnits: CollectionConfig = {
     {
       name: 'currentIssues',
       type: 'textarea',
+    },
+    {
+      name: 'ispOwner',
+      type: 'relationship',
+      relationTo: 'companies',
+      required: true,
     },
   ],
 };

@@ -12,10 +12,10 @@ const Contacts: CollectionConfig = {
     afterDelete: [getAuditLogDeleteHook('contacts')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'contacts' }),
-    create: ({ req }) => isAdminOrHasPermission({ req, action: 'create', collection: 'contacts' }),
-    update: ({ req }) => isAdminOrHasPermission({ req, action: 'update', collection: 'contacts' }),
-    delete: ({ req }) => isAdminOrHasPermission({ req, action: 'delete', collection: 'contacts' }),
+    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'contacts'),
+    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'contacts'),
+    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'contacts'),
+    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'contacts'),
   },
   fields: [
     {
@@ -31,6 +31,12 @@ const Contacts: CollectionConfig = {
     {
       name: 'source',
       type: 'text',
+    },
+    {
+      name: 'ispOwner',
+      type: 'relationship',
+      relationTo: 'companies',
+      required: true,
     },
   ],
 }

@@ -12,10 +12,10 @@ const MessageTemplates: CollectionConfig = {
     afterDelete: [getAuditLogDeleteHook('messageTemplates')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'messageTemplates' }),
-    create: ({ req }) => isAdminOrHasPermission({ req, action: 'create', collection: 'messageTemplates' }),
-    update: ({ req }) => isAdminOrHasPermission({ req, action: 'update', collection: 'messageTemplates' }),
-    delete: ({ req }) => isAdminOrHasPermission({ req, action: 'delete', collection: 'messageTemplates' }),
+    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'messageTemplates'),
+    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'messageTemplates'),
+    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'messageTemplates'),
+    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'messageTemplates'),
   },
   fields: [
     {
@@ -27,6 +27,12 @@ const MessageTemplates: CollectionConfig = {
     {
       name: 'content',
       type: 'textarea',
+      required: true,
+    },
+    {
+      name: 'ispOwner',
+      type: 'relationship',
+      relationTo: 'companies',
       required: true,
     },
   ],

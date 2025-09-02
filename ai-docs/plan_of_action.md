@@ -37,7 +37,12 @@ This section lists all identified custom logic, hooks, endpoints, and integratio
 *   **Subscriber Provisioning & RADIUS Integration:** Status: Completed
 *   **Subscriber Suspension (RADIUS Integration):** Status: Completed
 *   **Automated Reconnection:** Status: Completed
-*   **Monitoring & Alerting (Zabbix Integration):** Status: Completed
+*   **Monitoring & Alerting (Zabbix Integration):** Status: Replaced/Updated (See 5.9. ISP Network Monitoring & Financial Oversight)
+
+### 5.9. ISP Network Monitoring & Financial Oversight
+*   **Status:** Completed
+*   **Specification:** `12_monitoring_and_financial_oversight.md`
+*   **Goal:** Implement a comprehensive network monitoring and financial oversight system using LibreNMS, including automated financial tracking, emergency diagnostics, and a streamlined ticket-to-work-order escalation workflow.
 
 ### 2.5. Support & Communications Module (`05_support_and_communications_module.md`)
 

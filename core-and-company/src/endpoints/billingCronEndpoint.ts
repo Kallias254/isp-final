@@ -69,6 +69,7 @@ const billingCronEndpoint: Endpoint = {
               quantity: 1,
               price: servicePlan.price,
             }],
+            ispOwner: subscriber.ispOwner, // Assign ispOwner from the Subscriber
           },
         });
 
@@ -150,6 +151,7 @@ const billingCronEndpoint: Endpoint = {
             dueDate: new Date().toISOString(), // Due today
             status: 'unpaid',
             lineItems: lineItems,
+            ispOwner: subscriber.ispOwner, // Assign ispOwner from the Subscriber
           },
         });
 

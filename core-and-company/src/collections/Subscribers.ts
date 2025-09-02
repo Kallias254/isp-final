@@ -16,10 +16,10 @@ const Subscribers: CollectionConfig = {
     useAsTitle: 'accountNumber',
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'subscribers' }),
-    create: ({ req }) => isAdminOrHasPermission({ req, action: 'create', collection: 'subscribers' }),
-    update: ({ req }) => isAdminOrHasPermission({ req, action: 'update', collection: 'subscribers' }),
-    delete: ({ req }) => isAdminOrHasPermission({ req, action: 'delete', collection: 'subscribers' }),
+    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'subscribers'),
+    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'subscribers'),
+    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'subscribers'),
+    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'subscribers'),
   },
   fields: [
     {
@@ -200,9 +200,9 @@ const Subscribers: CollectionConfig = {
       type: 'text',
     },
     {
-      name: 'router',
+      name: 'cpeDevice',
       type: 'relationship',
-      relationTo: 'resources',
+      relationTo: 'network-devices',
       hasMany: false,
     },
     {
@@ -211,6 +211,12 @@ const Subscribers: CollectionConfig = {
       admin: {
         description: 'Device token for sending push notifications to the subscriber\'s app.',
       },
+    },
+    {
+      name: 'ispOwner',
+      type: 'relationship',
+      relationTo: 'companies',
+      required: true,
     },
   ],
   hooks: {
@@ -251,162 +257,7 @@ const Subscribers: CollectionConfig = {
               dueDate: new Date().toISOString(),
               status: 'unpaid',
               lineItems: lineItems,
+              ispOwner: doc.ispOwner, // Assign ispOwner from the Subscriber
             },
           });
           payload.logger.info(`Upfront charges invoice created for new trial subscriber ${subscriberId}.`);
-        }
-        return doc;
-      },
-      // Existing hook for Initial Invoice Generation
-      async ({ req, doc, operation, previousDoc }) => {
-        const typedDoc: any = doc; // Use 'any' to avoid stale type errors during build
-
-        // Only generate an invoice if a service plan is assigned and the user is activated
-        if (operation === 'update' && typedDoc.status === 'active' && previousDoc.status === 'pending-installation' && typedDoc.servicePlan) {
-          const payload = req.payload;
-          const subscriberId = typedDoc.id;
-          const servicePlan = typedDoc.servicePlan;
-
-          // Fetch the full service plan details
-          const plan = await payload.findByID({
-            collection: 'plans',
-            id: typeof servicePlan === 'object' ? servicePlan.id : servicePlan,
-          });
-
-          if (!plan) {
-            payload.logger.error(`Service Plan not found for Subscriber ${subscriberId}`);
-            return doc;
-          }
-
-          let totalAmountDue = 0;
-          const lineItems: { description: string; quantity: number; price: number; }[] = [];
-
-          // Add recurring plan fee
-          lineItems.push({
-            description: `Service Plan: ${plan.name} (${plan.billingCycle})`,
-            quantity: 1,
-            price: plan.price,
-          });
-          totalAmountDue += plan.price;
-
-          // Add one-off charges
-          if (typedDoc.upfrontCharges && Array.isArray(typedDoc.upfrontCharges)) {
-            const initialCharges: { description: string; quantity: number; price: number; }[] = typedDoc.upfrontCharges;
-            if (initialCharges.length > 0) {
-              initialCharges.forEach((charge: { description: string; quantity: number; price: number; }) => {
-                lineItems.push({
-                  description: charge.description,
-                  quantity: charge.quantity,
-                  price: charge.price,
-                });
-                totalAmountDue += charge.quantity * charge.price;
-              });
-            }
-          }
-
-          // Create the first Invoice
-          await payload.create({
-            collection: 'invoices',
-            data: {
-              invoiceNumber: `INV-${Date.now()}`,
-              subscriber: subscriberId,
-              amountDue: totalAmountDue,
-              dueDate: new Date().toISOString(), // Due today for initial invoice
-              status: 'unpaid',
-              lineItems: lineItems,
-            },
-          });
-
-          payload.logger.info(`Initial Invoice created for Subscriber ${subscriberId}`);
-
-          // Publish the subscriber.activated event
-          payload.logger.info({
-            event: 'subscriber.activated',
-            subscriberId: subscriberId,
-            accountNumber: typedDoc.accountNumber,
-            message: `Event: Subscriber ${typedDoc.accountNumber} was activated.`
-          });
-        }
-        return doc;
-      },
-      // New hook for WorkOrder creation
-      async ({ req, doc, operation }) => {
-        const typedDoc = doc as Subscriber; // Explicitly type doc
-        if (operation === 'create') {
-          const payload = req.payload;
-          const subscriberId = typedDoc.id;
-
-          // Create a new WorkOrder for New Installation
-          await payload.create({
-            collection: 'work-orders',
-            data: {
-              orderType: 'new-installation',
-              subscriber: subscriberId,
-              status: 'pending',
-              notes: `New installation for subscriber ${typedDoc.firstName} ${typedDoc.lastName} (${typedDoc.accountNumber})`,
-            },
-          });
-
-          payload.logger.info(`New Installation WorkOrder created for Subscriber ${subscriberId}`);
-        }
-        return doc;
-      },
-      // New hook for status changes (e.g., suspended)
-      async ({ req, doc, operation, previousDoc }) => { // Changed originalDoc to previousDoc
-        const typedDoc = doc as Subscriber; // Explicitly type doc
-        const typedPreviousDoc = previousDoc as Subscriber; // Explicitly type previousDoc
-        if (operation === 'update' && typedPreviousDoc && typedPreviousDoc.status !== typedDoc.status) { // Changed originalDoc to previousDoc
-          const payload = req.payload;
-          const subscriber = typedDoc;
-
-          if (!subscriber.deviceToken) {
-            payload.logger.warn(`No deviceToken found for subscriber ${subscriber.id}. Skipping status change push notification.`);
-            return doc;
-          }
-
-          let title = '';
-          let content = '';
-          let triggerEvent = '';
-
-          switch (subscriber.status) {
-            case 'suspended':
-              title = 'Service Suspended!';
-              content = `Your service has been suspended due to an overdue balance. Please make a payment to restore service.`;
-              triggerEvent = 'subscriber.suspended';
-              break;
-            case 'active':
-              // Only send if not a reconnection (handled by Payments hook)
-              if (previousDoc.status !== 'suspended') { // Changed originalDoc to previousDoc
-                title = 'Service Active!';
-                content = `Your service is now active. Enjoy uninterrupted internet!`;
-                triggerEvent = 'subscriber.active';
-              }
-              break;
-            // Add other status changes as needed
-          }
-
-          if (title && content) {
-            await sendNotification({
-              payload: payload,
-              recipient: subscriber.id,
-              type: 'push',
-              deviceToken: subscriber.deviceToken || undefined,
-              title: title,
-              content: content,
-              triggerEvent: triggerEvent,
-              data: {
-                subscriberId: subscriber.id,
-                status: subscriber.status,
-              },
-            });
-            payload.logger.info(`Push notification sent for subscriber ${subscriber.id} status change to ${subscriber.status}`);
-          }
-        }
-        return doc;
-      },
-    ],
-    afterDelete: [getAuditLogDeleteHook('subscribers')],
-  },
-};
-
-export default Subscribers;

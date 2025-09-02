@@ -9,10 +9,10 @@ const Invoices: CollectionConfig = {
     useAsTitle: 'invoiceNumber',
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'invoices' }),
-    create: ({ req }) => isAdminOrHasPermission({ req, action: 'create', collection: 'invoices' }),
-    update: ({ req }) => isAdminOrHasPermission({ req, action: 'update', collection: 'invoices' }),
-    delete: ({ req }) => isAdminOrHasPermission({ req, action: 'delete', collection: 'invoices' }),
+    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'invoices'),
+    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'invoices'),
+    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'invoices'),
+    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'invoices'),
   },
   fields: [
     {
@@ -81,6 +81,12 @@ const Invoices: CollectionConfig = {
       ],
       required: true,
     },
+    {
+      name: 'ispOwner',
+      type: 'relationship',
+      relationTo: 'companies',
+      required: true,
+    },
   ],
   hooks: {
     afterChange: [
@@ -144,6 +150,7 @@ const Invoices: CollectionConfig = {
                 invoiceNumber: invoice.invoiceNumber,
                 subscriberId: subscriber.id,
               },
+              ispOwner: invoice.ispOwner,
             });
             payload.logger.info(`Push notification sent for invoice ${invoice.invoiceNumber} (event: ${triggerEvent})`);
           }

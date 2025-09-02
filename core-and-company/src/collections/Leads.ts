@@ -8,10 +8,10 @@ const Leads: CollectionConfig = {
     useAsTitle: 'subscriberName',
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'leads' }),
-    create: ({ req }) => isAdminOrHasPermission({ req, action: 'create', collection: 'leads' }),
-    update: ({ req }) => isAdminOrHasPermission({ req, action: 'update', collection: 'leads' }),
-    delete: ({ req }) => isAdminOrHasPermission({ req, action: 'delete', collection: 'leads' }),
+    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'leads'),
+    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'leads'),
+    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'leads'),
+    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'leads'),
   },
   fields: [
     {
@@ -80,6 +80,12 @@ const Leads: CollectionConfig = {
       name: 'notes',
       type: 'richText',
     },
+    {
+      name: 'ispOwner',
+      type: 'relationship',
+      relationTo: 'companies',
+      required: true,
+    },
   ],
   hooks: {
     afterChange: [
@@ -102,6 +108,7 @@ const Leads: CollectionConfig = {
               nextDueDate: new Date().toISOString(), // Set to today for now
               accountBalance: 0,
               addressNotes: doc.notes,
+              ispOwner: doc.ispOwner, // Assign ispOwner from the Lead
               // connectionType and assignedIp will be managed by Ops
             },
           });

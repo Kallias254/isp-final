@@ -13,10 +13,10 @@ const Plans: CollectionConfig = {
     afterDelete: [getAuditLogDeleteHook('plans')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'plans' }),
-    create: ({ req }) => isAdminOrHasPermission({ req, action: 'create', collection: 'plans' }),
-    update: ({ req }) => isAdminOrHasPermission({ req, action: 'update', collection: 'plans' }),
-    delete: ({ req }) => isAdminOrHasPermission({ req, action: 'delete', collection: 'plans' }),
+    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'plans'),
+    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'plans'),
+    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'plans'),
+    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'plans'),
   },
   fields: [
     {
@@ -80,6 +80,12 @@ const Plans: CollectionConfig = {
       admin: {
         condition: (_, siblingData) => siblingData?.ipAssignmentType === 'static-public',
       },
+    },
+    {
+      name: 'ispOwner',
+      type: 'relationship',
+      relationTo: 'companies',
+      required: true,
     },
   ],
 }

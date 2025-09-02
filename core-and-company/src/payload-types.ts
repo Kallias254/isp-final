@@ -68,6 +68,7 @@ export interface Staff {
   assignedRole: string | Role;
   status: 'active' | 'inactive';
   phoneNumber?: string;
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -109,6 +110,7 @@ export interface Plan {
   activeForNewSignups?: boolean;
   ipAssignmentType: 'dynamic' | 'static-public';
   staticIpPool?: string | IpSubnet;
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
@@ -116,6 +118,7 @@ export interface IpSubnet {
   id: string;
   network: string;
   description: string;
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
@@ -129,6 +132,7 @@ export interface Partner {
   commissionRate?: number;
   referralCount?: number;
   perks?: boolean;
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
@@ -145,12 +149,14 @@ export interface Building {
    */
   location?: [number, number];
   equipment?: string[] | NetworkDevice[];
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
 export interface Media {
   id: string;
   alt: string;
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
   url?: string;
@@ -181,6 +187,7 @@ export interface IpAddress {
   subnet: string | IpSubnet;
   status: 'available' | 'assigned' | 'reserved';
   assignedDevice?: string | NetworkDevice;
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
@@ -203,6 +210,7 @@ export interface Invoice {
     price: number;
     id?: string;
   }[];
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
@@ -239,6 +247,7 @@ export interface Subscriber {
   macAddress?: string;
   cpeDevice?: string | NetworkDevice;
   deviceToken?: string;
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
@@ -249,6 +258,7 @@ export interface Payment {
   amountPaid: number;
   paymentMethod: 'mpesa' | 'bank-transfer' | 'cash';
   paymentDate: string;
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
@@ -290,6 +300,7 @@ export interface BuildingUnit {
   currentProvider?: string;
   competitorPaymentDate?: string;
   currentIssues?: string;
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
@@ -306,6 +317,7 @@ export interface Lead {
   notes?: {
     [k: string]: unknown;
   }[];
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
@@ -316,6 +328,24 @@ export interface WorkOrder {
   status: 'pending' | 'scheduled' | 'in-progress' | 'completed' | 'failed';
   assignedTo?: string | Staff;
   notes?: string;
+  ticket?: string | Ticket;
+  ispOwner: string | Company;
+  updatedAt: string;
+  createdAt: string;
+}
+export interface Ticket {
+  id: string;
+  ticketID: string;
+  subscriber?: string | Subscriber;
+  subject: string;
+  description: {
+    [k: string]: unknown;
+  }[];
+  status: 'open' | 'in-progress' | 'resolved' | 'closed';
+  priority: 'low' | 'medium' | 'high';
+  assignedTo?: string | Staff;
+  workOrder?: string | WorkOrder;
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
@@ -327,20 +357,7 @@ export interface CrisisEvent {
   description?: string;
   startTime?: string;
   endTime?: string;
-  updatedAt: string;
-  createdAt: string;
-}
-export interface Ticket {
-  id: string;
-  ticketID: string;
-  subscriber: string | Subscriber;
-  subject: string;
-  description: {
-    [k: string]: unknown;
-  }[];
-  status: 'open' | 'in-progress' | 'resolved' | 'closed';
-  priority: 'low' | 'medium' | 'high';
-  assignedTo?: string | Staff;
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
@@ -353,6 +370,7 @@ export interface Message {
   triggerEvent?: string;
   sentBy?: string | Staff;
   bulkSend?: boolean;
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
@@ -361,6 +379,7 @@ export interface Contact {
   phoneNumber: string;
   fullName?: string;
   source?: string;
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
@@ -368,6 +387,7 @@ export interface MessageTemplate {
   id: string;
   templateName: string;
   content: string;
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }

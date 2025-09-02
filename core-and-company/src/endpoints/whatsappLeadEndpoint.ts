@@ -40,6 +40,7 @@ const whatsappLeadEndpoint: Endpoint = {
           subscriberPhone: phoneNumber,
           serviceLocation,
           notes,
+          ispOwner: partner.ispOwner, // Assign ispOwner from the Partner
         },
       });
 

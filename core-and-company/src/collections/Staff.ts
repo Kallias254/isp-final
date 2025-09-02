@@ -14,10 +14,10 @@ const Staff: CollectionConfig = {
     afterDelete: [getAuditLogDeleteHook('staff')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'staff' }),
-    create: ({ req }) => isAdminOrHasPermission({ req, action: 'create', collection: 'staff' }),
-    update: ({ req }) => isAdminOrHasPermission({ req, action: 'update', collection: 'staff' }),
-    delete: ({ req }) => isAdminOrHasPermission({ req, action: 'delete', collection: 'staff' }),
+    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'staff'),
+    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'staff'),
+    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'staff'),
+    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'staff'),
   },
   fields: [
     {
@@ -51,6 +51,12 @@ const Staff: CollectionConfig = {
     {
       name: 'phoneNumber',
       type: 'text',
+    },
+    {
+      name: 'ispOwner',
+      type: 'relationship',
+      relationTo: 'companies',
+      required: true,
     },
   ],
 }

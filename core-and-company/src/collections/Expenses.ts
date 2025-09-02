@@ -12,10 +12,10 @@ const Expenses: CollectionConfig = {
     afterDelete: [getAuditLogDeleteHook('expenses')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'expenses' }),
-    create: ({ req }) => isAdminOrHasPermission({ req, action: 'create', collection: 'expenses' }),
-    update: ({ req }) => isAdminOrHasPermission({ req, action: 'update', collection: 'expenses' }),
-    delete: ({ req }) => isAdminOrHasPermission({ req, action: 'delete', collection: 'expenses' }),
+    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'expenses'),
+    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'expenses'),
+    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'expenses'),
+    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'expenses'),
   },
   fields: [
     {
@@ -29,26 +29,27 @@ const Expenses: CollectionConfig = {
       },
     },
     {
+        name: 'expenseType',
+        type: 'select',
+        options: [
+            { label: 'Capital Expenditure (CAPEX)', value: 'capex' },
+            { label: 'Operational Expenditure (OPEX)', value: 'opex' },
+        ],
+    },
+    {
       name: 'category',
       type: 'select',
       options: [
-        { label: 'Bandwidth', value: 'bandwidth' },
         { label: 'Salaries', value: 'salaries' },
+        { label: 'Bandwidth', value: 'bandwidth' },
         { label: 'Rent', value: 'rent' },
         { label: 'Utilities', value: 'utilities' },
         { label: 'Marketing', value: 'marketing' },
-        { label: 'Equipment', value: 'equipment' },
+        { label: 'Network Hardware', value: 'network-hardware' },
+        { label: 'Vehicles', value: 'vehicles' },
+        { label: 'Tools', value: 'tools' },
         { label: 'Other', value: 'other' },
       ],
-      required: true,
-    },
-    {
-      name: 'vendor',
-      type: 'text',
-    },
-    {
-      name: 'amount',
-      type: 'number',
       required: true,
     },
     {
@@ -56,9 +57,27 @@ const Expenses: CollectionConfig = {
       type: 'textarea',
     },
     {
-      name: 'receipt',
-      type: 'upload',
-      relationTo: 'media', // Assuming a media collection for file uploads
+      name: 'amount',
+      type: 'number',
+      required: true,
+    },
+    {
+        name: 'relatedAsset',
+        type: 'relationship',
+        relationTo: ['network-devices', 'staff'],
+    },
+    {
+        name: 'status',
+        type: 'select',
+        options: [
+            { label: 'Uncategorized', value: 'uncategorized' },
+            { label: 'Approved', value: 'approved' },
+        ],
+    },
+    {
+        name: 'ispOwner',
+        type: 'relationship',
+        relationTo: 'companies',
     },
   ],
 };

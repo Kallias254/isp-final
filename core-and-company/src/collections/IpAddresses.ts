@@ -12,10 +12,10 @@ const IpAddresses: CollectionConfig = {
     afterDelete: [getAuditLogDeleteHook('ipAddresses')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'ipAddresses' }),
-    create: ({ req }) => isAdminOrHasPermission({ req, action: 'create', collection: 'ipAddresses' }),
-    update: ({ req }) => isAdminOrHasPermission({ req, action: 'update', collection: 'ipAddresses' }),
-    delete: ({ req }) => isAdminOrHasPermission({ req, action: 'delete', collection: 'ipAddresses' }),
+    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'ipAddresses'),
+    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'ipAddresses'),
+    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'ipAddresses'),
+    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'ipAddresses'),
   },
   fields: [
     {
@@ -42,10 +42,16 @@ const IpAddresses: CollectionConfig = {
       required: true,
     },
     {
-      name: 'assignedTo',
+      name: 'assignedDevice',
       type: 'relationship',
-      relationTo: 'subscribers',
+      relationTo: 'network-devices',
       hasMany: false,
+    },
+    {
+      name: 'ispOwner',
+      type: 'relationship',
+      relationTo: 'companies',
+      required: true,
     },
   ],
 };

@@ -9,10 +9,10 @@ const Tickets: CollectionConfig = {
     useAsTitle: 'ticketID',
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'tickets' }),
-    create: ({ req }) => isAdminOrHasPermission({ req, action: 'create', collection: 'tickets' }),
-    update: ({ req }) => isAdminOrHasPermission({ req, action: 'update', collection: 'tickets' }),
-    delete: ({ req }) => isAdminOrHasPermission({ req, action: 'delete', collection: 'tickets' }),
+    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'tickets'),
+    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'tickets'),
+    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'tickets'),
+    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'tickets'),
   },
   fields: [
     {
@@ -26,7 +26,7 @@ const Tickets: CollectionConfig = {
       type: 'relationship',
       relationTo: 'subscribers',
       hasMany: false,
-      required: true,
+      required: false,
     },
     {
       name: 'subject',
@@ -65,13 +65,92 @@ const Tickets: CollectionConfig = {
       relationTo: 'staff',
       hasMany: false,
     },
+    {
+      name: 'workOrder',
+      type: 'relationship',
+      relationTo: 'work-orders',
+      hasMany: false,
+    },
+    {
+      name: 'ispOwner',
+      type: 'relationship',
+      relationTo: 'companies',
+      required: true,
+    },
   ],
   hooks: {
     afterChange: [
-      async ({ req, doc, operation, previousDoc }) => { // Changed originalDoc to previousDoc
+      async ({ req, doc, operation, previousDoc }) => {
+        const payload = req.payload;
+        const ticket = doc;
+
+        // --- Work Order Creation/Update Logic ---
+        if (operation === 'create' || (operation === 'update' && doc.assignedTo !== previousDoc.assignedTo)) {
+          if (doc.assignedTo && typeof doc.assignedTo === 'object') {
+            const assignedStaff = await payload.findByID({
+              collection: 'staff',
+              id: doc.assignedTo.id,
+              depth: 1, // Populate assignedRole
+            });
+
+            if (assignedStaff && assignedStaff.assignedRole && typeof assignedStaff.assignedRole === 'object' && assignedStaff.assignedRole.name === 'Technician') {
+              // Check if a WorkOrder already exists for this ticket
+              const existingWorkOrders = await payload.find({
+                collection: 'work-orders',
+                where: {
+                  ticket: {
+                    equals: ticket.id,
+                  },
+                },
+                limit: 1,
+              });
+
+              let workOrderDoc;
+              if (existingWorkOrders.docs.length > 0) {
+                // Update existing WorkOrder
+                workOrderDoc = await payload.update({
+                  collection: 'work-orders',
+                  id: existingWorkOrders.docs[0].id,
+                  data: {
+                    assignedTo: assignedStaff.id,
+                    // Update other fields if necessary
+                  },
+                });
+                payload.logger.info(`Updated WorkOrder ${workOrderDoc.id} for Ticket ${ticket.ticketID}.`);
+              } else {
+                // Create new WorkOrder
+                workOrderDoc = await payload.create({
+                  collection: 'work-orders',
+                  data: {
+                    orderType: 'repair', // Default type
+                    subscriber: ticket.subscriber ? (typeof ticket.subscriber === 'object' ? ticket.subscriber.id : ticket.subscriber) : undefined,
+                    status: 'pending',
+                    assignedTo: assignedStaff.id,
+                    notes: `Work Order for Ticket #${ticket.ticketID}: ${ticket.subject}.\n\n${ticket.description}`,
+                    ticket: ticket.id, // Link back to the ticket
+                    ispOwner: ticket.ispOwner, // Assign ispOwner from the Ticket
+                  },
+                });
+                payload.logger.info(`Created WorkOrder ${workOrderDoc.id} for Ticket ${ticket.ticketID}.`);
+              }
+
+              // Update the Ticket to link to the WorkOrder
+              if (ticket.workOrder !== workOrderDoc.id) {
+                await payload.update({
+                  collection: 'tickets',
+                  id: ticket.id,
+                  data: {
+                    workOrder: workOrderDoc.id,
+                  },
+                });
+              }
+            }
+          }
+        }
+
+        // --- Original Notification Logic ---
         // Only send notifications for 'create' or 'update' operations that change status
-        if (operation === 'create' || (operation === 'update' && previousDoc && previousDoc.status !== doc.status)) { // Changed originalDoc to previousDoc
-          const payload = req.payload;
+        if (operation === 'create' || (operation === 'update' && previousDoc && previousDoc.status !== doc.status)) {
           const ticket = doc;
 
           // Fetch the subscriber to get deviceToken
@@ -128,6 +207,7 @@ const Tickets: CollectionConfig = {
                 ticketID: ticket.ticketID,
                 subscriberId: subscriber.id,
               },
+              ispOwner: ticket.ispOwner,
             });
             payload.logger.info(`Push notification sent for ticket ${ticket.ticketID} (event: ${triggerEvent})`);
           }

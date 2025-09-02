@@ -1,7 +1,7 @@
 import payload from 'payload';
 import dotenv from 'dotenv';
 import path from 'path';
-import { Role, Plan, Subscriber, Invoice, Ticket, Expense } from './payload-types';
+import { Role, Plan, Subscriber, Invoice, Ticket, Expense, Company } from './payload-types';
 
 dotenv.config({
   path: path.resolve(__dirname, '../.env'),
@@ -16,6 +16,31 @@ const seed = async () => {
     });
 
     payload.logger.info('Seeding data...');
+
+    // 0. Create Default Company
+    const defaultCompany = await payload.find({
+      collection: 'companies',
+      where: {
+        name: {
+          equals: 'Vantage ISP',
+        },
+      },
+    });
+
+    let companyId;
+    if (defaultCompany.docs.length === 0) {
+      const newCompany = await payload.create({
+        collection: 'companies',
+        data: {
+          name: 'Vantage ISP',
+        },
+      });
+      companyId = newCompany.id;
+      payload.logger.info('Default company created.');
+    } else {
+      companyId = defaultCompany.docs[0].id;
+      payload.logger.info('Default company already exists.');
+    }
 
     // 1. Create Roles
     const adminRole = await payload.find({
@@ -85,6 +110,7 @@ const seed = async () => {
           fullName: 'Admin User', // Added required field
           status: 'active',      // Added required field
           assignedRole: adminRoleId, // Assign the Admin role
+          ispOwner: companyId, // Assign the company
         },
       });
       payload.logger.info('Admin user created.');
@@ -110,6 +136,7 @@ const seed = async () => {
                 fullName: 'Test Admin User',
                 status: 'active',
                 assignedRole: adminRoleId,
+                ispOwner: companyId, // Assign the company
             },
         });
         payload.logger.info('Test admin user created.');
@@ -135,6 +162,7 @@ const seed = async () => {
                 fullName: 'Test Admin User 2',
                 status: 'active',
                 assignedRole: adminRoleId,
+                ispOwner: companyId, // Assign the company
             },
         });
         payload.logger.info('Test admin user 2 created.');
@@ -152,6 +180,7 @@ const seed = async () => {
         downloadSpeed: 10,
         uploadSpeed: 10,
         ipAssignmentType: 'dynamic', // Added required field
+        ispOwner: companyId, // Assign the company
       },
     });
     payload.logger.info('Monthly plan created.');
@@ -165,6 +194,7 @@ const seed = async () => {
         downloadSpeed: 25,
         uploadSpeed: 25,
         ipAssignmentType: 'dynamic', // Added required field
+        ispOwner: companyId, // Assign the company
       },
     });
     payload.logger.info('Quarterly plan created.');
@@ -186,6 +216,7 @@ const seed = async () => {
         accountBalance: 0,
         deviceToken: 'test-device-token-john',
         upfrontCharges: [], // Added required field
+        ispOwner: companyId, // Assign the company
       },
     });
     payload.logger.info('Subscriber 1 created.');
@@ -206,6 +237,7 @@ const seed = async () => {
         accountBalance: 4000, // Overdue amount
         deviceToken: 'test-device-token-jane',
         upfrontCharges: [], // Added required field
+        ispOwner: companyId, // Assign the company
       },
     });
     payload.logger.info('Subscriber 2 created (suspended).');
@@ -222,6 +254,7 @@ const seed = async () => {
         lineItems: [
           { description: 'Monthly Internet Service', quantity: 1, price: 1500 },
         ],
+        ispOwner: companyId, // Assign the company
     },
   });
   payload.logger.info('Invoice for SUB001 created.');
@@ -237,6 +270,7 @@ const seed = async () => {
       lineItems: [
         { description: 'Quarterly Internet Service', quantity: 1, price: 4000 },
       ],
+      ispOwner: companyId, // Assign the company
     },
   });
   payload.logger.info('Overdue Invoice for SUB002 created.');
@@ -260,6 +294,7 @@ const seed = async () => {
       ],
       status: 'open',
       priority: 'high',
+      ispOwner: companyId, // Assign the company
     },
   });
   payload.logger.info('Ticket TKT001 created.');
@@ -282,6 +317,7 @@ const seed = async () => {
       ],
       status: 'in-progress',
       priority: 'medium',
+      ispOwner: companyId, // Assign the company
     },
   });
   payload.logger.info('Ticket TKT002 created.');
@@ -291,10 +327,10 @@ const seed = async () => {
     collection: 'expenses',
     data: {
       expenseDate: new Date().toISOString(),
-      category: 'equipment',
-      vendor: 'Router Supplier',
       amount: 5000,
       description: 'Purchase of 10 new routers',
+      category: 'network-hardware',
+      ispOwner: companyId, // Assign the company
       // receipt: (assuming media collection is populated with an ID)
     },
   });

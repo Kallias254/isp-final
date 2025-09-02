@@ -60,6 +60,7 @@ const sendBulkMessageEndpoint: Endpoint = {
           triggerEvent: 'bulk.send',
           sentBy: user ? user.id : undefined,
           bulkSend: true,
+          ispOwner: user.ispOwner, // Assign ispOwner from the Staff user
         },
       });
 
@@ -73,6 +74,7 @@ const sendBulkMessageEndpoint: Endpoint = {
           triggerEvent: 'bulk.send.individual',
           sentBy: user ? user.id : undefined,
           bulkSend: true,
+          ispOwner: user.ispOwner, // Assign ispOwner from the Staff user
         });
       }
 

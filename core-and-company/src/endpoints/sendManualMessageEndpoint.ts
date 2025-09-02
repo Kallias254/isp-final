@@ -44,6 +44,7 @@ const sendManualMessageEndpoint: Endpoint = {
         content: messageContent,
         triggerEvent: 'manual.reply',
         sentBy: user ? user.id : undefined, // Log the staff user who sent it
+        ispOwner: typeof subscriber.ispOwner === 'object' ? subscriber.ispOwner.id : subscriber.ispOwner, // Assign ispOwner from the Subscriber
       });
 
       return res.status(200).json({ message: 'Manual message sent and logged successfully' });

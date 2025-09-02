@@ -6,6 +6,7 @@ import Staff from './collections/Staff';
 import Plans from './collections/Plans';
 import Partners from './collections/Partners';
 import Roles from './collections/core/Roles'; // New import
+import Company from './collections/core/Company'; // New import
 import AuditLogs from './collections/AuditLogs';
 
 // Billing and Finance Collections
@@ -21,10 +22,12 @@ import Leads from './collections/Leads';
 
 // Operations and Network Management Collections
 import Subscribers from './collections/Subscribers';
-import Resources from './collections/Resources';
+import NetworkDevices from './collections/NetworkDevices';
 import IpSubnets from './collections/IpSubnets';
 import IpAddresses from './collections/IpAddresses';
 import WorkOrders from './collections/WorkOrders';
+import CrisisEvents from './collections/CrisisEvents';
+import ServiceLocations from './collections/ServiceLocations';
 
 // Support and Communications Collections
 import Tickets from './collections/Tickets';
@@ -36,17 +39,16 @@ import whatsappLeadEndpoint from './endpoints/whatsappLeadEndpoint';
 import billingCronEndpoint from './endpoints/billingCronEndpoint';
 import mpesaCallbackEndpoint from './endpoints/mpesaCallbackEndpoint';
 import mpesaInitiatePaymentEndpoint from './endpoints/mpesaInitiatePaymentEndpoint'; // New import
-import zabbixWebhookEndpoint from './endpoints/zabbixWebhookEndpoint';
+import monitoringWebhookEndpoint from './endpoints/monitoringWebhookEndpoint';
 import sendManualMessageEndpoint from './endpoints/sendManualMessageEndpoint';
 import sendBulkMessageEndpoint from './endpoints/sendBulkMessageEndpoint';
+import subscriberConnectionStatusEndpoint from './endpoints/subscriberConnectionStatusEndpoint';
 
 import { payloadCloud } from '@payloadcms/plugin-cloud';
 import BeforeDashboard from './components/BeforeDashboard';
 
-import helloEndpoint from './endpoints/hello';
-
 export default buildConfig({
-  cors: ['http://localhost:3002'],
+  cors: ['http://localhost:3000'],
   admin: {
     user: Staff.slug,
     
@@ -59,15 +61,16 @@ export default buildConfig({
     billingCronEndpoint,
     mpesaCallbackEndpoint,
     mpesaInitiatePaymentEndpoint, // New endpoint
-    zabbixWebhookEndpoint,
+    monitoringWebhookEndpoint,
     sendManualMessageEndpoint,
     sendBulkMessageEndpoint,
-    helloEndpoint,
+    subscriberConnectionStatusEndpoint,
   ],
   collections: [
     AuditLogs,
     Staff,
     Roles, // New collection
+    Company,
     Plans,
     Partners,
     Invoices,
@@ -78,10 +81,12 @@ export default buildConfig({
     BuildingUnits,
     Leads,
     Subscribers,
-    Resources,
+    NetworkDevices,
     IpSubnets,
     IpAddresses,
     WorkOrders,
+    CrisisEvents,
+    ServiceLocations,
     Tickets,
     Messages,
     Contacts,

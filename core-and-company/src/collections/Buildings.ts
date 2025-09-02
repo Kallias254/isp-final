@@ -12,10 +12,10 @@ const Buildings: CollectionConfig = {
     afterDelete: [getAuditLogDeleteHook('buildings')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'buildings' }),
-    create: ({ req }) => isAdminOrHasPermission({ req, action: 'create', collection: 'buildings' }),
-    update: ({ req }) => isAdminOrHasPermission({ req, action: 'update', collection: 'buildings' }),
-    delete: ({ req }) => isAdminOrHasPermission({ req, action: 'delete', collection: 'buildings' }),
+    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'buildings'),
+    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'buildings'),
+    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'buildings'),
+    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'buildings'),
   },
   fields: [
     {
@@ -58,11 +58,17 @@ const Buildings: CollectionConfig = {
     {
       name: 'equipment',
       type: 'relationship',
-      relationTo: 'resources',
+      relationTo: 'network-devices',
       hasMany: true,
       admin: {
         readOnly: true,
       },
+    },
+    {
+      name: 'ispOwner',
+      type: 'relationship',
+      relationTo: 'companies',
+      required: true,
     },
   ],
 };

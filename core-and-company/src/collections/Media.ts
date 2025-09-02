@@ -12,15 +12,21 @@ const Media: CollectionConfig = {
     afterDelete: [getAuditLogDeleteHook('media')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'media' }),
-    create: ({ req }) => isAdminOrHasPermission({ req, action: 'create', collection: 'media' }),
-    update: ({ req }) => isAdminOrHasPermission({ req, action: 'update', collection: 'media' }),
-    delete: ({ req }) => isAdminOrHasPermission({ req, action: 'delete', collection: 'media' }),
+    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'media'),
+    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'media'),
+    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'media'),
+    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'media'),
   },
   fields: [
     {
       name: 'alt',
       type: 'text',
+      required: true,
+    },
+    {
+      name: 'ispOwner',
+      type: 'relationship',
+      relationTo: 'companies',
       required: true,
     },
   ],

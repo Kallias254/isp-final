@@ -12,10 +12,10 @@ const IpSubnets: CollectionConfig = {
     afterDelete: [getAuditLogDeleteHook('ipSubnets')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'ipSubnets' }),
-    create: ({ req }) => isAdminOrHasPermission({ req, action: 'create', collection: 'ipSubnets' }),
-    update: ({ req }) => isAdminOrHasPermission({ req, action: 'update', collection: 'ipSubnets' }),
-    delete: ({ req }) => isAdminOrHasPermission({ req, action: 'delete', collection: 'ipSubnets' }),
+    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'ipSubnets'),
+    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'ipSubnets'),
+    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'ipSubnets'),
+    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'ipSubnets'),
   },
   fields: [
     {
@@ -27,6 +27,12 @@ const IpSubnets: CollectionConfig = {
     {
       name: 'description',
       type: 'text',
+      required: true,
+    },
+    {
+      name: 'ispOwner',
+      type: 'relationship',
+      relationTo: 'companies',
       required: true,
     },
   ],

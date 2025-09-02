@@ -130,6 +130,7 @@ const mpesaCallbackEndpoint: Endpoint = {
           amountPaid: amountPaid,
           paymentMethod: 'mpesa',
           paymentDate: new Date().toISOString(),
+          ispOwner: targetSubscriber.ispOwner, // Assign ispOwner from the Subscriber
         },
       });
 

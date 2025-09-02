@@ -8,10 +8,10 @@ const WorkOrders: CollectionConfig = {
     useAsTitle: 'orderType',
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'workOrders' }),
-    create: ({ req }) => isAdminOrHasPermission({ req, action: 'create', collection: 'workOrders' }),
-    update: ({ req }) => isAdminOrHasPermission({ req, action: 'update', collection: 'workOrders' }),
-    delete: ({ req }) => isAdminOrHasPermission({ req, action: 'delete', collection: 'workOrders' }),
+    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'workOrders'),
+    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'workOrders'),
+    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'workOrders'),
+    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'workOrders'),
   },
   fields: [
     {
@@ -52,6 +52,19 @@ const WorkOrders: CollectionConfig = {
     {
       name: 'notes',
       type: 'textarea',
+    },
+    {
+      name: 'ticket',
+      type: 'relationship',
+      relationTo: 'tickets',
+      hasMany: false,
+      unique: true,
+    },
+    {
+      name: 'ispOwner',
+      type: 'relationship',
+      relationTo: 'companies',
+      required: true,
     },
   ],
   hooks: {
@@ -120,7 +133,7 @@ const WorkOrders: CollectionConfig = {
                 id: ipAddressToAssign.id,
                 data: {
                   status: 'assigned',
-                  assignedTo: subscriber.id,
+                  assignedDevice: subscriber.id,
                 },
               });
               assignedIpAddress = ipAddressToAssign.ipAddress;

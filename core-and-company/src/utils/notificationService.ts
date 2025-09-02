@@ -12,9 +12,10 @@ interface SendNotificationArgs {
   deviceToken?: string; // Required for 'push' notifications
   title?: string; // Optional title for push notifications
   data?: Record<string, any>; // Optional data payload for push notifications
+  ispOwner: string; // Add ispOwner here
 }
 
-export const sendNotification = async ({ payload, recipient, type, content, triggerEvent, sentBy, bulkSend, deviceToken, title, data }: SendNotificationArgs) => {
+export const sendNotification = async ({ payload, recipient, type, content, triggerEvent, sentBy, bulkSend, deviceToken, title, data, ispOwner }: SendNotificationArgs) => {
   try {
     let status: 'sent' | 'failed' = 'sent';
     let externalServiceResponse: any;
@@ -66,6 +67,7 @@ export const sendNotification = async ({ payload, recipient, type, content, trig
         triggerEvent,
         sentBy,
         bulkSend,
+        ispOwner,
         // For push notifications, we might want to log deviceToken or a reference to it
         // For simplicity, we'll just log the recipient (user ID) and type 'push'
       },

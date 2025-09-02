@@ -12,10 +12,10 @@ const Messages: CollectionConfig = {
     afterDelete: [getAuditLogDeleteHook('messages')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'messages' }),
-    create: ({ req }) => isAdminOrHasPermission({ req, action: 'create', collection: 'messages' }),
-    update: ({ req }) => isAdminOrHasPermission({ req, action: 'update', collection: 'messages' }),
-    delete: ({ req }) => isAdminOrHasPermission({ req, action: 'delete', collection: 'messages' }),
+    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'messages'),
+    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'messages'),
+    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'messages'),
+    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'messages'),
   },
   fields: [
     {
@@ -61,6 +61,12 @@ const Messages: CollectionConfig = {
       name: 'bulkSend',
       type: 'checkbox',
       defaultValue: false
+    },
+    {
+      name: 'ispOwner',
+      type: 'relationship',
+      relationTo: 'companies',
+      required: true,
     },
   ],
 }

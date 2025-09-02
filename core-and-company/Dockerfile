@@ -13,6 +13,10 @@ RUN yarn install
 # Copy the rest of the application code
 COPY . .
 
+# Copy the entrypoint script and make it executable
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # Debugging step: List contents of /app and /app/src
 RUN ls -la /app
 RUN ls -la /app/src
@@ -25,4 +29,4 @@ RUN cp src/payload-types.ts /app/payload-types.ts
 EXPOSE 3000
 
 # Command to run the application
-CMD ["yarn", "serve"]
+ENTRYPOINT ["/app/entrypoint.sh"]

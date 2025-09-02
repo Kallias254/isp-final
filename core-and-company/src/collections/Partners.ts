@@ -13,10 +13,10 @@ const Partners: CollectionConfig = {
     afterDelete: [getAuditLogDeleteHook('partners')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission({ req, action: 'read', collection: 'partners' }),
-    create: ({ req }) => isAdminOrHasPermission({ req, action: 'create', collection: 'partners' }),
-    update: ({ req }) => isAdminOrHasPermission({ req, action: 'update', collection: 'partners' }),
-    delete: ({ req }) => isAdminOrHasPermission({ req, action: 'delete', collection: 'partners' }),
+    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'partners'),
+    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'partners'),
+    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'partners'),
+    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'partners'),
   },
   fields: [
     {
@@ -64,6 +64,12 @@ const Partners: CollectionConfig = {
     {
       name: 'perks',
       type: 'checkbox',
+    },
+    {
+      name: 'ispOwner',
+      type: 'relationship',
+      relationTo: 'companies',
+      required: true,
     },
   ],
 }

@@ -12,11 +12,10 @@ interface SendNotificationArgs {
   deviceToken?: string; // Required for 'push' notifications
   title?: string; // Optional title for push notifications
   data?: Record<string, any>; // Optional data payload for push notifications
-  ispOwner: string; // Add ispOwner here
+  ispOwner: string | { id: string }; // Add ispOwner here
 }
 
 export const sendNotification = async ({ payload, recipient, type, content, triggerEvent, sentBy, bulkSend, deviceToken, title, data, ispOwner }: SendNotificationArgs) => {
-  console.log('ispOwner in sendNotification', ispOwner);
   try {
     let status: 'sent' | 'failed' = 'sent';
     let externalServiceResponse: any;
@@ -58,20 +57,23 @@ export const sendNotification = async ({ payload, recipient, type, content, trig
     }
 
     // Log action in Messages collection
+    if (!ispOwner) {
+      payload.logger.error('ispOwner is required to send a notification');
+      return;
+    }
+    const messageData = {
+      recipient,
+      type,
+      content,
+      status,
+      triggerEvent,
+      sentBy,
+      bulkSend,
+      ispOwner: typeof ispOwner === 'object' ? ispOwner.id : ispOwner,
+    };
     await payload.create({
       collection: 'messages',
-      data: {
-        recipient,
-        type,
-        content,
-        status, // Use the determined status
-        triggerEvent,
-        sentBy,
-        bulkSend,
-        ispOwner,
-        // For push notifications, we might want to log deviceToken or a reference to it
-        // For simplicity, we'll just log the recipient (user ID) and type 'push'
-      },
+      data: messageData,
     });
 
     payload.logger.info(`Notification logged in Messages collection for ${recipient} with status ${status}`);

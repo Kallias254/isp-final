@@ -66,7 +66,7 @@ export default buildConfig({
   graphQL: {
     schemaOutputFile: path.resolve(__dirname, 'generated-schema.graphql'),
   },
-  // onInit: async (payload) => {
-  //   await seed(payload);
-  // },
+  onInit: async (payload) => {
+    await seed(payload);
+  },
 });

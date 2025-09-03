@@ -20,6 +20,7 @@ services:
       MONGODB_URI: mongodb://mongodb:27017/payload
       NODE_ENV: development
       PAYLOAD_PUBLIC_SERVER_URL: http://localhost:3001
+      PAYLOAD_SEED: 'true'
     
     depends_on:
       - mongodb

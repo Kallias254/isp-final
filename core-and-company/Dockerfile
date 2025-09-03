@@ -14,8 +14,9 @@ RUN yarn install
 COPY . .
 
 # Copy the entrypoint script and make it executable
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+COPY entrypoint-with-db-clear.sh /app/entrypoint-with-db-clear.sh
+RUN chmod +x /app/entrypoint-with-db-clear.sh
+RUN sed -i 's/\r$//' /app/entrypoint-with-db-clear.sh
 
 # Debugging step: List contents of /app and /app/src
 RUN ls -la /app
@@ -27,6 +28,3 @@ RUN cp src/payload-types.ts /app/payload-types.ts
 
 # Expose the port Payload runs on
 EXPOSE 3000
-
-# Command to run the application
-ENTRYPOINT ["/app/entrypoint.sh"]

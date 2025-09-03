@@ -1,4 +1,5 @@
 import { Payload } from 'payload';
+import axios, { AxiosInstance } from 'axios';
 import { NetworkDevice, Subscriber, Ticket } from '../payload-types'; // Import necessary types
 
 interface WebhookRequest {
@@ -9,9 +10,46 @@ interface WebhookRequest {
 
 export class MonitoringService {
   private payload: Payload;
+  private axiosInstance: AxiosInstance;
 
   constructor(payload: Payload) {
     this.payload = payload;
+
+    const libreNmsUrl = process.env.LIBRENMS_API_URL;
+    const libreNmsApiKey = process.env.LIBRENMS_API_KEY;
+
+    if (!libreNmsUrl || !libreNmsApiKey) {
+      this.payload.logger.warn('LibreNMS API URL or Key is not configured. MonitoringService will not be able to connect.');
+      // Set a dummy instance to prevent crashes if called
+      this.axiosInstance = axios.create();
+    } else {
+      this.axiosInstance = axios.create({
+        baseURL: libreNmsUrl,
+        headers: {
+          'X-Auth-Token': libreNmsApiKey,
+        },
+      });
+      this.payload.logger.info('MonitoringService initialized with LibreNMS configuration.');
+      // Temporary test call to verify connection on startup
+      this.getDevices().catch(err => this.payload.logger.error(err, 'Error testing LibreNMS connection on startup'));
+    }
+  }
+
+  async getDevices(): Promise<any> {
+    try {
+      this.payload.logger.info('Fetching devices from LibreNMS...');
+      const response = await this.axiosInstance.get('/devices');
+      this.payload.logger.info(`Successfully fetched ${response.data.devices.length} devices from LibreNMS.`);
+      // console.log('LibreNMS devices:', response.data); // For debugging
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        this.payload.logger.error(error.response?.data || error.message, 'Failed to fetch devices from LibreNMS');
+      } else {
+        this.payload.logger.error(error, 'An unexpected error occurred while fetching devices from LibreNMS');
+      }
+      throw error;
+    }
   }
 
   async handleWebhook(req: WebhookRequest): Promise<void> {
@@ -71,7 +109,7 @@ export class MonitoringService {
     const ticketData: Partial<Ticket> = {
       ticketID: `TKT-CRISIS-${Date.now()}`,
       subject: `Network Alert: Device '${rootDevice.deviceName}' is Offline. (${rootDevice.deviceType})`,
-      description: `Outage detected for ${rootDevice.deviceName} (${rootDevice.deviceType}).\nThis device affects ${affectedSubscriberCount} subscribers.\nAffected Subscriber IDs: ${affectedSubscriberList}.\nCrisis Event ID: ${crisisEvent.id}.`,
+      description: `Outage detected for ${rootDevice.deviceName} (${rootDevice.deviceType}).\nThis device affects ${affectedSubscriberCount} subscribers.\nAffected Subscriber IDs: ${affectedSubscriberList}.\nCrisis Event ID: ${crisisEvent.id}`,
       status: 'open',
       priority: 'high',
       ispOwner: rootDevice.ispOwner, // Assign ispOwner from the root device
@@ -80,8 +118,6 @@ export class MonitoringService {
     if (affectedSubscriberIds.length > 0) {
       ticketData.subscriber = affectedSubscriberIds[0];
     } else {
-      // If no affected subscribers, assign to a default subscriber or handle as appropriate
-      // For now, we'll just log a warning and proceed without a subscriber
       this.payload.logger.warn(`No affected subscribers found for crisis event ${crisisEvent.id}. Ticket will be created without a subscriber.`);
     }
 

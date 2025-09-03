@@ -13,6 +13,7 @@ services:
   payload:
     build: ./core-and-company
     container_name: core-and-company-payload
+    entrypoint: /app/entrypoint-with-db-clear.sh
     ports:
       - "3001:3000"
     environment:
@@ -21,6 +22,8 @@ services:
       NODE_ENV: development
       PAYLOAD_PUBLIC_SERVER_URL: http://localhost:3001
       PAYLOAD_SEED: 'true'
+      LIBRENMS_API_URL: http://librenms:8000/api/v0
+      LIBRENMS_API_KEY: 29de01522f979bd5d39e9b4c47a3aa47
     
     depends_on:
       - mongodb
@@ -80,3 +83,6 @@ volumes:
 networks:
   app-network:
     driver: bridge
+
+include:
+  - external-services/librenms/docker-compose.yml

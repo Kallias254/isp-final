@@ -137,3 +137,6 @@ frontend/.env.local
 .vercel
 next-env.d.ts
 *.bak
+
+# LibreNMS database volume
+external-services/librenms/db/

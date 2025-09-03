@@ -2,6 +2,7 @@ import { buildConfig } from 'payload/config';
 import path from 'path';
 import { Staff } from './payload-types'; // Import Staff type
 import { seed } from './seed';
+import { MonitoringService } from './utils/monitoringService'; // Import MonitoringService
 
 // Import collections
 import AuditLogs from './collections/AuditLogs';
@@ -68,5 +69,7 @@ export default buildConfig({
   },
   onInit: async (payload) => {
     await seed(payload);
+    // Initialize the monitoring service on startup
+    new MonitoringService(payload);
   },
 });

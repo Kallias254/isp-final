@@ -92,8 +92,9 @@ export const seed = async (payload: Payload) => {
   payload.logger.info('Plan 2 seeded.');
 
   // Seed Subscribers
-  await payload.create({
+  const sub1 = await payload.create({
     collection: 'subscribers',
+    id: '1',
     data: {
       ispOwner: company.id,
       accountNumber: 'SUB001',
@@ -108,10 +109,12 @@ export const seed = async (payload: Payload) => {
       accountBalance: 0,
     },
   });
+  console.log('Seeded subscriber 1:', JSON.stringify(sub1, null, 2));
   payload.logger.info('Subscriber 1 seeded.');
 
-  await payload.create({
+  const sub2 = await payload.create({
     collection: 'subscribers',
+    id: '2',
     data: {
       ispOwner: company.id,
       accountNumber: 'SUB002',
@@ -126,6 +129,7 @@ export const seed = async (payload: Payload) => {
       accountBalance: 0,
     },
   });
+  console.log('Seeded subscriber 2:', JSON.stringify(sub2, null, 2));
   payload.logger.info('Subscriber 2 seeded.');
 
   // Seed Buildings

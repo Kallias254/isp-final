@@ -1,46 +1,49 @@
 import { Endpoint } from 'payload/config';
+import { monitoringService } from '../utils/monitoringService';
 
-const subscriberConnectionStatusEndpoint: Endpoint = {
-  path: '/api/subscribers/:id/connection-status',
+export const getSubscriberConnectionStatus: Endpoint = {
+  path: '/subscribers/:id/connection-status',
   method: 'get',
-  handler: async (req, res) => {
-    try {
-      const subscriberId = req.params.id;
-      const { payload } = req;
+  custom: {
+    public: true,
+  },
+  handler: async (req, res, next) => {
+    const { payload, params } = req;
 
-      // 1. Fetch the subscriber to get their CPE device
+    const subscribers = await payload.find({ collection: 'subscribers' });
+    console.log('All subscribers:', JSON.stringify(subscribers, null, 2));
+
+    console.log('Fetching connection status for subscriber with id:', params.id, typeof params.id);
+
+    if (!params.id) {
+      return res.status(400).json({ error: 'Subscriber ID is required' });
+    }
+
+    try {
       const subscriber = await payload.findByID({
         collection: 'subscribers',
-        id: subscriberId,
-        depth: 1, // Ensure cpeDevice is populated
+        id: params.id,
+        depth: 1, // to get the cpeDevice object
       });
 
       if (!subscriber) {
-        return res.status(404).send({ error: 'Subscriber not found' });
+        return res.status(404).json({ error: 'Subscriber not found' });
       }
 
       if (!subscriber.cpeDevice || typeof subscriber.cpeDevice !== 'object') {
-        return res.status(404).send({ error: 'Subscriber does not have an assigned CPE device' });
+        return res.status(404).json({ error: 'No CPE device assigned to this subscriber.' });
       }
 
-      // 2. Use MonitoringService to get real-time metrics for the CPE device
-      // TODO: Implement a method in MonitoringService to fetch real-time metrics from LibreNMS
-      // For now, return dummy data
-      const metrics = {
-        status: 'Online',
-        latency: '20ms',
-        packetLoss: '0%',
-        throughput: '50Mbps',
-        signalQuality: '-60dBm',
-      };
+      const cpeDevice = subscriber.cpeDevice;
 
-      return res.status(200).send(metrics);
+      // Use the singleton monitoringService to get the device status
+      const status = await monitoringService.getDeviceStatus(cpeDevice.id);
 
-    } catch (error: unknown) {
-      req.payload.logger.error(`Error fetching subscriber connection status: ${(error as Error).message}`);
-      return res.status(500).send({ error: 'Internal server error' });
+      return res.status(200).json(status);
+
+    } catch (error) {
+      payload.logger.error(error, `Error fetching connection status for subscriber ${params.id}`);
+      return res.status(500).json({ error: 'Internal Server Error' });
     }
   },
 };
-
-export default subscriberConnectionStatusEndpoint;

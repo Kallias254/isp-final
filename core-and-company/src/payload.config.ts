@@ -1,8 +1,9 @@
 import { buildConfig } from 'payload/config';
 import path from 'path';
-import { Staff } from './payload-types'; // Import Staff type
 import { seed } from './seed';
-import { MonitoringService } from './utils/monitoringService'; // Import MonitoringService
+import { monitoringService } from './utils/monitoringService'; // Import the service instance
+import { getSubscriberConnectionStatus } from './endpoints/subscriberConnectionStatusEndpoint';
+import monitoringWebhookEndpoint from './endpoints/monitoringWebhookEndpoint';
 
 // Import collections
 import AuditLogs from './collections/AuditLogs';
@@ -61,6 +62,10 @@ export default buildConfig({
     Company,
     Roles,
   ],
+  endpoints: [
+    getSubscriberConnectionStatus,
+    monitoringWebhookEndpoint,
+  ],
   typescript: {
     outputFile: path.resolve(__dirname, 'payload-types.ts'),
   },
@@ -69,7 +74,7 @@ export default buildConfig({
   },
   onInit: async (payload) => {
     await seed(payload);
-    // Initialize the monitoring service on startup
-    new MonitoringService(payload);
+    // Initialize the monitoring service with the payload instance
+    monitoringService.init(payload);
   },
 });

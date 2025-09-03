@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import { subscribers } from "../mock-data"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,6 +26,7 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
   } from "@/components/ui/breadcrumb"
+import { ConnectionStatusTab } from "./ConnectionStatusTab"; // Import our new component
 
 export default function SubscriberDetailPage({ params }: { params: { id: string } }) {
   const subscriber = subscribers.find((s) => s.id === params.id)
@@ -127,8 +128,9 @@ export default function SubscriberDetailPage({ params }: { params: { id: string 
         </Card>
       </div>
 
-      <Tabs defaultValue="invoices">
+      <Tabs defaultValue="connection">
         <TabsList>
+          <TabsTrigger value="connection">Connection Status</TabsTrigger>
           <TabsTrigger value="invoices">Invoices</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
           <TabsTrigger value="tickets">Tickets</TabsTrigger>
@@ -136,6 +138,9 @@ export default function SubscriberDetailPage({ params }: { params: { id: string 
           <TabsTrigger value="activity">Activity Log</TabsTrigger>
           <TabsTrigger value="service">Service Details</TabsTrigger>
         </TabsList>
+        <TabsContent value="connection">
+            <ConnectionStatusTab subscriberId={subscriber.id} />
+        </TabsContent>
         <TabsContent value="invoices">
           <Card>
             <CardHeader>

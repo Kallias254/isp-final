@@ -95,16 +95,20 @@ const data = {
       icon: Network,
       items: [
         {
-          title: "Work Orders",
-          url: "/dashboard/operations/work-orders",
+          title: "Network Map",
+          url: "/dashboard/operations/map",
         },
         {
-          title: "Inventory (Resources)",
-          url: "/dashboard/operations/resources",
+          title: "Device Inventory",
+          url: "/dashboard/operations/network-devices",
         },
         {
           title: "IP Manager (IPAM)",
           url: "/dashboard/operations/ipam",
+        },
+        {
+          title: "Work Orders",
+          url: "/dashboard/operations/work-orders",
         },
       ],
     },

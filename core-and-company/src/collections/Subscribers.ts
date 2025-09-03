@@ -168,17 +168,14 @@ const Subscribers: CollectionConfig = {
         {
           name: 'description',
           type: 'text',
-          required: true,
         },
         {
           name: 'quantity',
           type: 'number',
-          required: true,
         },
         {
           name: 'price',
           type: 'number',
-          required: true,
         },
       ],
     },

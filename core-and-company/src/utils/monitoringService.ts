@@ -71,25 +71,7 @@ export class MonitoringService {
     const ticketData: Partial<Ticket> = {
       ticketID: `TKT-CRISIS-${Date.now()}`,
       subject: `Network Alert: Device '${rootDevice.deviceName}' is Offline. (${rootDevice.deviceType})`,
-      description: [
-        {
-          children: [
-            {
-              text: `Outage detected for ${rootDevice.deviceName} (${rootDevice.deviceType}).\n`,
-            },
-            {
-              text: `This device affects ${affectedSubscriberCount} subscribers.\n`,
-            },
-            {
-              text: `Affected Subscriber IDs: ${affectedSubscriberList}.\n`,
-            },
-            {
-              text: `Crisis Event ID: ${crisisEvent.id}.`,
-            },
-          ],
-          type: 'p',
-        },
-      ],
+      description: `Outage detected for ${rootDevice.deviceName} (${rootDevice.deviceType}).\nThis device affects ${affectedSubscriberCount} subscribers.\nAffected Subscriber IDs: ${affectedSubscriberList}.\nCrisis Event ID: ${crisisEvent.id}.`,
       status: 'open',
       priority: 'high',
       ispOwner: rootDevice.ispOwner, // Assign ispOwner from the root device
@@ -97,11 +79,15 @@ export class MonitoringService {
 
     if (affectedSubscriberIds.length > 0) {
       ticketData.subscriber = affectedSubscriberIds[0];
+    } else {
+      // If no affected subscribers, assign to a default subscriber or handle as appropriate
+      // For now, we'll just log a warning and proceed without a subscriber
+      this.payload.logger.warn(`No affected subscribers found for crisis event ${crisisEvent.id}. Ticket will be created without a subscriber.`);
     }
 
     await this.payload.create({
       collection: 'tickets',
-      data: ticketData,
+      data: ticketData as Ticket, // Cast to Ticket to satisfy type requirements
     });
 
     this.payload.logger.info(`High-priority Ticket created for device ${rootDevice.deviceName}.`);

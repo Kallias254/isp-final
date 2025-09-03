@@ -15,10 +15,10 @@ const Plans: CollectionConfig = {
     afterDelete: [getAuditLogDeleteHook('plans')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'plans'),
-    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'plans'),
-    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'plans'),
-    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'plans'),
+    read: isAdminOrHasPermission('read', 'plans'),
+    create: isAdminOrHasPermission('create', 'plans'),
+    update: isAdminOrHasPermission('update', 'plans'),
+    delete: isAdminOrHasPermission('delete', 'plans'),
   },
   fields: [
     {

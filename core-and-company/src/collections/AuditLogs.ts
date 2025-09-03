@@ -1,5 +1,5 @@
 import { CollectionConfig } from 'payload/types'
-import { isAdmin } from '../utils/access'
+import { isSuperAdmin } from '../utils/access'
 
 const AuditLog: CollectionConfig = {
   slug: 'audit-logs',
@@ -9,7 +9,7 @@ const AuditLog: CollectionConfig = {
     description: 'A log of all changes made to the system.',
   },
   access: {
-    read: ({ req }) => isAdmin({ req }),
+    read: ({ req }) => isSuperAdmin(req.user),
     create: () => false,
     update: () => false,
     delete: () => false,

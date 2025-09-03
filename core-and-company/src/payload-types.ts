@@ -229,7 +229,7 @@ export interface Invoice {
   subscriber: string | Subscriber;
   amountDue: number;
   dueDate: string;
-  status?: 'unpaid' | 'paid' | 'overdue' | 'waived';
+  status?: 'unpaid' | 'paid' | 'overdue' | 'waived' | 'partially-paid';
   lineItems: {
     description: string;
     quantity: number;
@@ -242,6 +242,33 @@ export interface Invoice {
 export interface Subscriber {
   id: string;
   ispOwner: string | Company;
+  accountNumber: string;
+  firstName: string;
+  lastName: string;
+  contactPhone: string;
+  email?: string;
+  mpesaNumber?: string;
+  status: 'active' | 'suspended' | 'pending-installation' | 'disconnected';
+  servicePlan: string | Plan;
+  billingCycle: 'monthly' | 'quarterly' | 'annually';
+  nextDueDate: string;
+  accountBalance?: number;
+  lastPaymentDate?: string;
+  trialDays?: number;
+  trialEndDate?: string;
+  upfrontCharges?: {
+    description?: string;
+    quantity?: number;
+    price?: number;
+    id?: string;
+  }[];
+  addressNotes?: string;
+  connectionType?: 'fiber' | 'wireless';
+  assignedIp?: string;
+  cpeDevice?: string | NetworkDevice;
+  radiusPassword?: string;
+  deviceToken?: string;
+  gracePeriodEndDate?: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -309,6 +336,7 @@ export interface Lead {
   preferredPlan?: string | Plan;
   preferredBillingCycle?: 'monthly' | 'quarterly' | 'annually';
   notes?: string;
+  serviceLocation: string;
   updatedAt: string;
   createdAt: string;
 }

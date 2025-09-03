@@ -141,6 +141,11 @@ const Leads: CollectionConfig = {
         name: 'notes',
         type: 'textarea',
     },
+    {
+        name: 'serviceLocation',
+        type: 'text',
+        required: true,
+    },
   ],
 };
 

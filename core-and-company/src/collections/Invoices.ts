@@ -131,6 +131,7 @@ const Invoices: CollectionConfig = {
             { label: 'Paid', value: 'paid' },
             { label: 'Overdue', value: 'overdue' },
             { label: 'Waived', value: 'waived' },
+            { label: 'Partially Paid', value: 'partially-paid' },
         ],
         defaultValue: 'unpaid',
     },

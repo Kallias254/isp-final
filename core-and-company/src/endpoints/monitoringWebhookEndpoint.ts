@@ -1,11 +1,12 @@
 import { Endpoint } from 'payload/config';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { MonitoringService } from '../utils/monitoringService';
+import { PayloadRequest } from 'payload/dist/types';
 
 const monitoringWebhookEndpoint: Endpoint = {
   path: '/monitoring-webhook',
   method: 'post',
-  handler: async (req: Request, res: Response) => {
+  handler: async (req: PayloadRequest, res: Response) => {
     const payload = req.payload;
     try {
       const monitoringService = new MonitoringService(payload);

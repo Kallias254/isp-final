@@ -16,10 +16,10 @@ const Staff: CollectionConfig = {
     afterDelete: [getAuditLogDeleteHook('staff')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'staff'),
-    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'staff'),
-    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'staff'),
-    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'staff'),
+    read: isAdminOrHasPermission('read', 'staff'),
+    create: isAdminOrHasPermission('create', 'staff'),
+    update: isAdminOrHasPermission('update', 'staff'),
+    delete: isAdminOrHasPermission('delete', 'staff'),
   },
   fields: [
     {

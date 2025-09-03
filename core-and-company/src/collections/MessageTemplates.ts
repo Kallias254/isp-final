@@ -1,6 +1,7 @@
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrHasPermission } from '../utils/access'
 import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook'
+import { setIspOwnerHook } from '../hooks/setIspOwner';
 
 const MessageTemplates: CollectionConfig = {
   slug: 'messageTemplates',
@@ -8,14 +9,15 @@ const MessageTemplates: CollectionConfig = {
     useAsTitle: 'templateName',
   },
   hooks: {
+    beforeChange: [setIspOwnerHook],
     afterChange: [getAuditLogHook('messageTemplates')],
     afterDelete: [getAuditLogDeleteHook('messageTemplates')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'messageTemplates'),
-    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'messageTemplates'),
-    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'messageTemplates'),
-    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'messageTemplates'),
+    read: isAdminOrHasPermission('read', 'messageTemplates'),
+    create: isAdminOrHasPermission('create', 'messageTemplates'),
+    update: isAdminOrHasPermission('update', 'messageTemplates'),
+    delete: isAdminOrHasPermission('delete', 'messageTemplates'),
   },
   fields: [
     {
@@ -34,6 +36,12 @@ const MessageTemplates: CollectionConfig = {
       type: 'relationship',
       relationTo: 'companies',
       required: true,
+      access: {
+        update: () => false, // Prevent manual modification
+      },
+      admin: {
+        hidden: true, // Hide from admin UI
+      },
     },
   ],
 }

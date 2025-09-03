@@ -1,6 +1,7 @@
 import { CollectionConfig } from 'payload/types';
 import { isAdminOrHasPermission } from '../utils/access';
 import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
+import { setIspOwnerHook } from '../hooks/setIspOwner';
 
 const IpSubnets: CollectionConfig = {
   slug: 'ipSubnets',
@@ -8,14 +9,15 @@ const IpSubnets: CollectionConfig = {
     useAsTitle: 'network',
   },
   hooks: {
+    beforeChange: [setIspOwnerHook],
     afterChange: [getAuditLogHook('ipSubnets')],
     afterDelete: [getAuditLogDeleteHook('ipSubnets')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'ipSubnets'),
-    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'ipSubnets'),
-    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'ipSubnets'),
-    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'ipSubnets'),
+    read: isAdminOrHasPermission('read', 'ipSubnets'),
+    create: isAdminOrHasPermission('create', 'ipSubnets'),
+    update: isAdminOrHasPermission('update', 'ipSubnets'),
+    delete: isAdminOrHasPermission('delete', 'ipSubnets'),
   },
   fields: [
     {
@@ -34,6 +36,12 @@ const IpSubnets: CollectionConfig = {
       type: 'relationship',
       relationTo: 'companies',
       required: true,
+      access: {
+        update: () => false, // Prevent manual modification
+      },
+      admin: {
+        hidden: true, // Hide from admin UI
+      },
     },
   ],
 };

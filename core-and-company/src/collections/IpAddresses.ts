@@ -1,6 +1,7 @@
 import { CollectionConfig } from 'payload/types';
 import { isAdminOrHasPermission } from '../utils/access';
 import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
+import { setIspOwnerHook } from '../hooks/setIspOwner';
 
 const IpAddresses: CollectionConfig = {
   slug: 'ipAddresses',
@@ -8,14 +9,15 @@ const IpAddresses: CollectionConfig = {
     useAsTitle: 'ipAddress',
   },
   hooks: {
+    beforeChange: [setIspOwnerHook],
     afterChange: [getAuditLogHook('ipAddresses')],
     afterDelete: [getAuditLogDeleteHook('ipAddresses')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'ipAddresses'),
-    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'ipAddresses'),
-    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'ipAddresses'),
-    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'ipAddresses'),
+    read: isAdminOrHasPermission('read', 'ipAddresses'),
+    create: isAdminOrHasPermission('create', 'ipAddresses'),
+    update: isAdminOrHasPermission('update', 'ipAddresses'),
+    delete: isAdminOrHasPermission('delete', 'ipAddresses'),
   },
   fields: [
     {
@@ -52,6 +54,12 @@ const IpAddresses: CollectionConfig = {
       type: 'relationship',
       relationTo: 'companies',
       required: true,
+      access: {
+        update: () => false, // Prevent manual modification
+      },
+      admin: {
+        hidden: true, // Hide from admin UI
+      },
     },
   ],
 };

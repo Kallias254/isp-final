@@ -1,5 +1,7 @@
 import { CollectionConfig } from 'payload/types';
 import { getAuditLogHook, getAuditLogDeleteHook } from '../../hooks/auditLogHook';
+import { collectionSlugs } from '../collectionSlugs';
+import { isSuperAdmin } from '../../utils/access';
 
 const Roles: CollectionConfig = {
   slug: 'roles',
@@ -11,12 +13,10 @@ const Roles: CollectionConfig = {
     afterDelete: [getAuditLogDeleteHook('roles')],
   },
   access: {
-    // TODO: Implement access control based on the new data-driven RBAC
-    // For now, allow all for development
-    read: () => true,
-    create: () => true,
-    update: () => true,
-    delete: () => true,
+    read: ({ req }) => isSuperAdmin(req.user),
+    create: ({ req }) => isSuperAdmin(req.user),
+    update: ({ req }) => isSuperAdmin(req.user),
+    delete: ({ req }) => isSuperAdmin(req.user),
   },
   fields: [
     {
@@ -32,9 +32,9 @@ const Roles: CollectionConfig = {
       fields: [
         {
           name: 'collection',
-          type: 'text',
+          type: 'select',
+          options: collectionSlugs.map(slug => ({ label: slug, value: slug })),
           required: true,
-          // TODO: Potentially make this a select with dynamic options from Payload collections
         },
         {
           name: 'read',

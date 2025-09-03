@@ -1,9 +1,20 @@
 import { CollectionConfig } from 'payload/types';
+import { setIspOwnerHook } from '../hooks/setIspOwner';
+import { isAdminOrHasPermission } from '../utils/access';
 
 const CrisisEvents: CollectionConfig = {
   slug: 'crisis-events',
   admin: {
     useAsTitle: 'description',
+  },
+  hooks: {
+    beforeChange: [setIspOwnerHook],
+  },
+  access: {
+    read: isAdminOrHasPermission('read', 'crisis-events'),
+    create: isAdminOrHasPermission('create', 'crisis-events'),
+    update: isAdminOrHasPermission('update', 'crisis-events'),
+    delete: isAdminOrHasPermission('delete', 'crisis-events'),
   },
   fields: [
     {
@@ -42,6 +53,12 @@ const CrisisEvents: CollectionConfig = {
         type: 'relationship',
         relationTo: 'companies',
         required: true,
+        access: {
+          update: () => false, // Prevent manual modification
+        },
+        admin: {
+          hidden: true, // Hide from admin UI
+        },
     },
   ],
 };

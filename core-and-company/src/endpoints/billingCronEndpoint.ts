@@ -230,9 +230,9 @@ const billingCronEndpoint: Endpoint = {
       }
 
       return res.status(200).json({ message: 'Automated billing cycle completed' });
-    } catch (error: any) {
-      payload.logger.error(`Error during automated billing cycle: ${error.message}`);
-      return res.status(500).json({ message: 'Internal server error', error: error.message });
+    } catch (error: unknown) {
+      payload.logger.error(`Error during automated billing cycle: ${(error as Error).message}`);
+      return res.status(500).json({ message: 'Internal server error', error: (error as Error).message });
     }
   },
 };

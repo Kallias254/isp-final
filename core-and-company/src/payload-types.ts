@@ -82,7 +82,31 @@ export interface Role {
   id: string;
   name: string;
   permissions: {
-    collection: string;
+    collection:
+      | 'audit-logs'
+      | 'staff'
+      | 'roles'
+      | 'companies'
+      | 'plans'
+      | 'partners'
+      | 'invoices'
+      | 'payments'
+      | 'expenses'
+      | 'media'
+      | 'buildings'
+      | 'buildingUnits'
+      | 'leads'
+      | 'subscribers'
+      | 'network-devices'
+      | 'ipSubnets'
+      | 'ipAddresses'
+      | 'work-orders'
+      | 'crisis-events'
+      | 'service-locations'
+      | 'tickets'
+      | 'messages'
+      | 'contacts'
+      | 'messageTemplates';
     read?: boolean;
     create?: boolean;
     update?: boolean;
@@ -194,71 +218,41 @@ export interface IpAddress {
 export interface ServiceLocation {
   id: string;
   name: string;
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
 export interface Invoice {
   id: string;
+  ispOwner: string | Company;
   invoiceNumber: string;
   subscriber: string | Subscriber;
   amountDue: number;
   dueDate: string;
-  status: 'draft' | 'unpaid' | 'paid' | 'partially-paid' | 'overdue' | 'cancelled';
+  status?: 'unpaid' | 'paid' | 'overdue' | 'waived';
   lineItems: {
     description: string;
     quantity: number;
     price: number;
     id?: string;
   }[];
-  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
 export interface Subscriber {
   id: string;
-  firstName: string;
-  lastName: string;
-  accountNumber: string;
-  mpesaNumber: string;
-  contactPhone?: string;
-  email?: string;
-  status: 'pending-installation' | 'active' | 'suspended' | 'deactivated';
-  servicePlan?: string | Plan;
-  billingCycle?: 'monthly' | 'quarterly';
-  nextDueDate?: string;
-  accountBalance?: number;
-  gracePeriodEndDate?: string;
-  trialDays?: number;
-  trialEndDate?: string;
-  addressNotes?: string;
-  internalNotes?: {
-    [k: string]: unknown;
-  }[];
-  upfrontCharges?: {
-    description: string;
-    quantity: number;
-    price: number;
-    id?: string;
-  }[];
-  connectionType?: 'pppoe' | 'ipoe-dhcp' | 'static-ip' | 'hotspot';
-  radiusUsername?: string;
-  radiusPassword?: string;
-  assignedIp?: string | IpAddress;
-  macAddress?: string;
-  cpeDevice?: string | NetworkDevice;
-  deviceToken?: string;
   ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
 export interface Payment {
   id: string;
-  paymentReference: string;
-  invoice?: string | Invoice;
-  amountPaid: number;
-  paymentMethod: 'mpesa' | 'bank-transfer' | 'cash';
-  paymentDate: string;
   ispOwner: string | Company;
+  paymentReference: string;
+  invoice: string | Invoice;
+  amountPaid: number;
+  paymentDate: string;
+  paymentMethod: 'mpesa' | 'bank-transfer' | 'cash';
   updatedAt: string;
   createdAt: string;
 }
@@ -288,7 +282,7 @@ export interface Expense {
         relationTo: 'staff';
       };
   status?: 'uncategorized' | 'approved';
-  ispOwner?: string | Company;
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
@@ -306,46 +300,41 @@ export interface BuildingUnit {
 }
 export interface Lead {
   id: string;
-  status: 'new' | 'contacted' | 'site-survey' | 'converted' | 'lost';
-  leadSource: 'partner-referral' | 'website' | 'direct-call';
-  referredBy?: string | Partner;
+  ispOwner: string | Company;
   subscriberName: string;
   subscriberPhone: string;
-  serviceLocation: string | BuildingUnit;
+  status?: 'new' | 'contacted' | 'qualified' | 'converted' | 'lost';
+  leadSource?: 'partner-referral' | 'direct' | 'marketing-campaign';
+  referredBy?: string | Partner;
   preferredPlan?: string | Plan;
-  preferredBillingCycle?: 'monthly' | 'quarterly';
-  notes?: {
-    [k: string]: unknown;
-  }[];
-  ispOwner: string | Company;
+  preferredBillingCycle?: 'monthly' | 'quarterly' | 'annually';
+  notes?: string;
   updatedAt: string;
   createdAt: string;
 }
 export interface WorkOrder {
   id: string;
-  orderType: 'new-installation' | 'repair' | 'site-survey';
-  subscriber: string | Subscriber;
-  status: 'pending' | 'scheduled' | 'in-progress' | 'completed' | 'failed';
+  ispOwner: string | Company;
+  orderType: 'new-installation' | 'repair' | 'upgrade' | 'other';
+  subscriber?: string | Subscriber;
+  status?: 'pending' | 'in-progress' | 'completed' | 'cancelled';
   assignedTo?: string | Staff;
   notes?: string;
   ticket?: string | Ticket;
-  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
 export interface Ticket {
   id: string;
+  ispOwner: string | Company;
   ticketID: string;
-  subscriber?: string | Subscriber;
+  subscriber: string | Subscriber;
   subject: string;
-  description: {
-    [k: string]: unknown;
-  }[];
-  status: 'open' | 'in-progress' | 'resolved' | 'closed';
-  priority: 'low' | 'medium' | 'high';
+  description: string;
+  status?: 'open' | 'in-progress' | 'resolved' | 'closed';
+  priority?: 'low' | 'medium' | 'high';
   assignedTo?: string | Staff;
   workOrder?: string | WorkOrder;
-  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }

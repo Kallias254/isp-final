@@ -1,17 +1,19 @@
 import { Endpoint } from 'payload/config';
+import { Request, Response } from 'express';
 import { MonitoringService } from '../utils/monitoringService';
 
 const monitoringWebhookEndpoint: Endpoint = {
-  path: '/api/monitoring/webhook',
+  path: '/monitoring-webhook',
   method: 'post',
-  handler: async (req, res, next) => {
+  handler: async (req: Request, res: Response) => {
+    const payload = req.payload;
     try {
-      const monitoringService = new MonitoringService(req.payload);
+      const monitoringService = new MonitoringService(payload);
       await monitoringService.handleWebhook(req);
-      res.status(200).send({ message: 'Webhook received' });
-    } catch (error) {
-      req.payload.logger.error(`Error in monitoring webhook: ${error.message}`);
-      res.status(500).send({ error: 'Internal server error' });
+      res.status(200).send('Webhook received');
+    } catch (error: unknown) {
+      payload.logger.error(`Error in monitoring webhook: ${(error as Error).message}`);
+      res.status(500).send('Internal Server Error');
     }
   },
 };

@@ -2,6 +2,7 @@
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrHasPermission } from '../utils/access'
 import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook'
+import { setIspOwnerHook } from '../hooks/setIspOwner';
 
 const Partners: CollectionConfig = {
   slug: 'partners',
@@ -9,14 +10,15 @@ const Partners: CollectionConfig = {
     useAsTitle: 'fullName',
   },
   hooks: {
+    beforeChange: [setIspOwnerHook],
     afterChange: [getAuditLogHook('partners')],
     afterDelete: [getAuditLogDeleteHook('partners')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'partners'),
-    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'partners'),
-    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'partners'),
-    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'partners'),
+    read: isAdminOrHasPermission('read', 'partners'),
+    create: isAdminOrHasPermission('create', 'partners'),
+    update: isAdminOrHasPermission('update', 'partners'),
+    delete: isAdminOrHasPermission('delete', 'partners'),
   },
   fields: [
     {
@@ -70,6 +72,12 @@ const Partners: CollectionConfig = {
       type: 'relationship',
       relationTo: 'companies',
       required: true,
+      access: {
+        update: () => false, // Prevent manual modification
+      },
+      admin: {
+        hidden: true, // Hide from admin UI
+      },
     },
   ],
 }

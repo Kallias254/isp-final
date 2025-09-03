@@ -2,6 +2,7 @@ import { CollectionConfig } from 'payload/types';
 import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
 import { sendNotification } from '../utils/notificationService'; // Import sendNotification
 import { isAdminOrHasPermission } from '../utils/access';
+import { setIspOwnerHook } from '../hooks/setIspOwner';
 
 const Invoices: CollectionConfig = {
   slug: 'invoices',
@@ -9,87 +10,15 @@ const Invoices: CollectionConfig = {
     useAsTitle: 'invoiceNumber',
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'invoices'),
-    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'invoices'),
-    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'invoices'),
-    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'invoices'),
+    read: isAdminOrHasPermission('read', 'invoices'),
+    create: isAdminOrHasPermission('create', 'invoices'),
+    update: isAdminOrHasPermission('update', 'invoices'),
+    delete: isAdminOrHasPermission('delete', 'invoices'),
   },
-  fields: [
-    {
-      name: 'invoiceNumber',
-      type: 'text',
-      required: true,
-      unique: true,
-    },
-    {
-      name: 'subscriber',
-      type: 'relationship',
-      relationTo: 'subscribers',
-      hasMany: false,
-      required: true,
-    },
-    {
-      name: 'amountDue',
-      type: 'number',
-      required: true,
-      admin: {
-        readOnly: true, // Auto-calculated from line items
-      },
-    },
-    {
-      name: 'dueDate',
-      type: 'date',
-      required: true,
-      admin: {
-        date: {
-          pickerAppearance: 'dayOnly',
-        },
-      },
-    },
-    {
-      name: 'status',
-      type: 'select',
-      options: [
-        { label: 'Draft', value: 'draft' },
-        { label: 'Unpaid', value: 'unpaid' },
-        { label: 'Paid', value: 'paid' },
-        { label: 'Partially Paid', value: 'partially-paid' },
-        { label: 'Overdue', value: 'overdue' },
-        { label: 'Cancelled', value: 'cancelled' },
-      ],
-      required: true,
-    },
-    {
-      name: 'lineItems',
-      type: 'array',
-      fields: [
-        {
-          name: 'description',
-          type: 'text',
-          required: true,
-        },
-        {
-          name: 'quantity',
-          type: 'number',
-          required: true,
-        },
-        {
-          name: 'price',
-          type: 'number',
-          required: true,
-        },
-      ],
-      required: true,
-    },
-    {
-      name: 'ispOwner',
-      type: 'relationship',
-      relationTo: 'companies',
-      required: true,
-    },
-  ],
   hooks: {
+    beforeChange: [setIspOwnerHook],
     afterChange: [
+      getAuditLogHook('invoices'),
       async ({ doc, previousDoc, operation, req }) => {
         const payload = req.payload;
         const invoice = doc;
@@ -159,6 +88,74 @@ const Invoices: CollectionConfig = {
     ],
     afterDelete: [getAuditLogDeleteHook('invoices')],
   },
+  fields: [
+    {
+        name: 'ispOwner',
+        type: 'relationship',
+        relationTo: 'companies',
+        required: true,
+        access: {
+            update: () => false,
+        },
+        admin: {
+            hidden: true,
+        },
+    },
+    {
+        name: 'invoiceNumber',
+        type: 'text',
+        required: true,
+        unique: true,
+    },
+    {
+        name: 'subscriber',
+        type: 'relationship',
+        relationTo: 'subscribers',
+        required: true,
+    },
+    {
+        name: 'amountDue',
+        type: 'number',
+        required: true,
+    },
+    {
+        name: 'dueDate',
+        type: 'date',
+        required: true,
+    },
+    {
+        name: 'status',
+        type: 'select',
+        options: [
+            { label: 'Unpaid', value: 'unpaid' },
+            { label: 'Paid', value: 'paid' },
+            { label: 'Overdue', value: 'overdue' },
+            { label: 'Waived', value: 'waived' },
+        ],
+        defaultValue: 'unpaid',
+    },
+    {
+        name: 'lineItems',
+        type: 'array',
+        fields: [
+            {
+                name: 'description',
+                type: 'text',
+                required: true,
+            },
+            {
+                name: 'quantity',
+                type: 'number',
+                required: true,
+            },
+            {
+                name: 'price',
+                type: 'number',
+                required: true,
+            },
+        ],
+    },
+  ],
 };
 
 export default Invoices;

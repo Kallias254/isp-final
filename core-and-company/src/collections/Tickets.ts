@@ -2,6 +2,7 @@ import { CollectionConfig } from 'payload/types';
 import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
 import { sendNotification } from '../utils/notificationService'; // Import sendNotification
 import { isAdminOrHasPermission } from '../utils/access';
+import { setIspOwnerHook } from '../hooks/setIspOwner';
 
 const Tickets: CollectionConfig = {
   slug: 'tickets',
@@ -9,77 +10,15 @@ const Tickets: CollectionConfig = {
     useAsTitle: 'ticketID',
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'tickets'),
-    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'tickets'),
-    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'tickets'),
-    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'tickets'),
+    read: isAdminOrHasPermission('read', 'tickets'),
+    create: isAdminOrHasPermission('create', 'tickets'),
+    update: isAdminOrHasPermission('update', 'tickets'),
+    delete: isAdminOrHasPermission('delete', 'tickets'),
   },
-  fields: [
-    {
-      name: 'ticketID',
-      type: 'text',
-      required: true,
-      unique: true,
-    },
-    {
-      name: 'subscriber',
-      type: 'relationship',
-      relationTo: 'subscribers',
-      hasMany: false,
-      required: false,
-    },
-    {
-      name: 'subject',
-      type: 'text',
-      required: true,
-    },
-    {
-      name: 'description',
-      type: 'richText',
-      required: true,
-    },
-    {
-      name: 'status',
-      type: 'select',
-      options: [
-        { label: 'Open', value: 'open' },
-        { label: 'In Progress', value: 'in-progress' },
-        { label: 'Resolved', value: 'resolved' },
-        { label: 'Closed', value: 'closed' },
-      ],
-      required: true,
-    },
-    {
-      name: 'priority',
-      type: 'select',
-      options: [
-        { label: 'Low', value: 'low' },
-        { label: 'Medium', value: 'medium' },
-        { label: 'High', value: 'high' },
-      ],
-      required: true,
-    },
-    {
-      name: 'assignedTo',
-      type: 'relationship',
-      relationTo: 'staff',
-      hasMany: false,
-    },
-    {
-      name: 'workOrder',
-      type: 'relationship',
-      relationTo: 'work-orders',
-      hasMany: false,
-    },
-    {
-      name: 'ispOwner',
-      type: 'relationship',
-      relationTo: 'companies',
-      required: true,
-    },
-  ],
   hooks: {
+    beforeChange: [setIspOwnerHook],
     afterChange: [
+      getAuditLogHook('tickets'),
       async ({ req, doc, operation, previousDoc }) => {
         const payload = req.payload;
         const ticket = doc;
@@ -216,6 +155,78 @@ const Tickets: CollectionConfig = {
     ],
     afterDelete: [getAuditLogDeleteHook('tickets')],
   },
+  fields: [
+    {
+        name: 'ispOwner',
+        type: 'relationship',
+        relationTo: 'companies',
+        required: true,
+        access: {
+            update: () => false,
+        },
+        admin: {
+            hidden: true,
+        },
+    },
+    {
+        name: 'ticketID',
+        type: 'text',
+        required: true,
+        unique: true,
+    },
+    {
+        name: 'subscriber',
+        type: 'relationship',
+        relationTo: 'subscribers',
+        required: true,
+    },
+    {
+        name: 'subject',
+        type: 'text',
+        required: true,
+    },
+    {
+        name: 'description',
+        type: 'textarea',
+        required: true,
+    },
+    {
+        name: 'status',
+        type: 'select',
+        options: [
+            { label: 'Open', value: 'open' },
+            { label: 'In Progress', value: 'in-progress' },
+            { label: 'Resolved', value: 'resolved' },
+            { label: 'Closed', value: 'closed' },
+        ],
+        defaultValue: 'open',
+    },
+    {
+        name: 'priority',
+        type: 'select',
+        options: [
+            { label: 'Low', value: 'low' },
+            { label: 'Medium', value: 'medium' },
+            { label: 'High', value: 'high' },
+        ],
+        defaultValue: 'medium',
+    },
+    {
+        name: 'assignedTo',
+        type: 'relationship',
+        relationTo: 'staff',
+    },
+    {
+        name: 'workOrder',
+        type: 'relationship',
+        relationTo: 'work-orders',
+        hasMany: false,
+        admin: {
+            readOnly: true,
+        },
+    },
+  ],
 };
+
 
 export default Tickets;

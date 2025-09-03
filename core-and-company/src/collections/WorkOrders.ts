@@ -1,6 +1,7 @@
 import { CollectionConfig } from 'payload/types';
 import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
 import { isAdminOrHasPermission } from '../utils/access';
+import { setIspOwnerHook } from '../hooks/setIspOwner';
 
 const WorkOrders: CollectionConfig = {
   slug: 'work-orders',
@@ -8,67 +9,15 @@ const WorkOrders: CollectionConfig = {
     useAsTitle: 'orderType',
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'workOrders'),
-    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'workOrders'),
-    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'workOrders'),
-    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'workOrders'),
+    read: isAdminOrHasPermission('read', 'work-orders'),
+    create: isAdminOrHasPermission('create', 'work-orders'),
+    update: isAdminOrHasPermission('update', 'work-orders'),
+    delete: isAdminOrHasPermission('delete', 'work-orders'),
   },
-  fields: [
-    {
-      name: 'orderType',
-      type: 'select',
-      options: [
-        { label: 'New Installation', value: 'new-installation' },
-        { label: 'Repair', value: 'repair' },
-        { label: 'Site Survey', value: 'site-survey' },
-      ],
-      required: true,
-    },
-    {
-      name: 'subscriber',
-      type: 'relationship',
-      relationTo: 'subscribers',
-      hasMany: false,
-      required: true,
-    },
-    {
-      name: 'status',
-      type: 'select',
-      options: [
-        { label: 'Pending', value: 'pending' },
-        { label: 'Scheduled', value: 'scheduled' },
-        { label: 'In Progress', value: 'in-progress' },
-        { label: 'Completed', value: 'completed' },
-        { label: 'Failed', value: 'failed' },
-      ],
-      required: true,
-    },
-    {
-      name: 'assignedTo',
-      type: 'relationship',
-      relationTo: 'staff',
-      hasMany: false,
-    },
-    {
-      name: 'notes',
-      type: 'textarea',
-    },
-    {
-      name: 'ticket',
-      type: 'relationship',
-      relationTo: 'tickets',
-      hasMany: false,
-      unique: true,
-    },
-    {
-      name: 'ispOwner',
-      type: 'relationship',
-      relationTo: 'companies',
-      required: true,
-    },
-  ],
   hooks: {
+    beforeChange: [setIspOwnerHook],
     afterChange: [
+      getAuditLogHook('work-orders'),
       async ({ req, doc, previousDoc }) => {
         // Check if WorkOrder is for New Installation and status changed to Completed
         if (
@@ -159,8 +108,8 @@ const WorkOrders: CollectionConfig = {
             //   },
             // });
             payload.logger.info(`FreeRADIUS API call simulated for Subscriber ${subscriber.id}`);
-          } catch (radiusError: any) {
-            payload.logger.error(`Error calling FreeRADIUS API for Subscriber ${subscriber.id}: ${radiusError.message}`);
+          } catch (radiusError: unknown) {
+            payload.logger.error(`Error calling FreeRADIUS API for Subscriber ${subscriber.id}: ${(radiusError as Error).message}`);
             // Consider changing WorkOrder status to 'Failed' or sending notification
             return doc;
           }
@@ -182,6 +131,62 @@ const WorkOrders: CollectionConfig = {
     ],
     afterDelete: [getAuditLogDeleteHook('work-orders')],
   },
+  fields: [
+    {
+        name: 'ispOwner',
+        type: 'relationship',
+        relationTo: 'companies',
+        required: true,
+        access: {
+            update: () => false,
+        },
+        admin: {
+            hidden: true,
+        },
+    },
+    {
+        name: 'orderType',
+        type: 'select',
+        options: [
+            { label: 'New Installation', value: 'new-installation' },
+            { label: 'Repair', value: 'repair' },
+            { label: 'Upgrade', value: 'upgrade' },
+            { label: 'Other', value: 'other' },
+        ],
+        required: true,
+    },
+    {
+        name: 'subscriber',
+        type: 'relationship',
+        relationTo: 'subscribers',
+    },
+    {
+        name: 'status',
+        type: 'select',
+        options: [
+            { label: 'Pending', value: 'pending' },
+            { label: 'In Progress', value: 'in-progress' },
+            { label: 'Completed', value: 'completed' },
+            { label: 'Cancelled', value: 'cancelled' },
+        ],
+        defaultValue: 'pending',
+    },
+    {
+        name: 'assignedTo',
+        type: 'relationship',
+        relationTo: 'staff',
+    },
+    {
+        name: 'notes',
+        type: 'textarea',
+    },
+    {
+        name: 'ticket',
+        type: 'relationship',
+        relationTo: 'tickets',
+        hasMany: false,
+    },
+  ],
 };
 
 export default WorkOrders;

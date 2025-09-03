@@ -2,6 +2,7 @@
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrHasPermission } from '../utils/access'
 import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook'
+import { setIspOwnerHook } from '../hooks/setIspOwner';
 
 const Plans: CollectionConfig = {
   slug: 'plans',
@@ -9,6 +10,7 @@ const Plans: CollectionConfig = {
     useAsTitle: 'name',
   },
   hooks: {
+    beforeChange: [setIspOwnerHook],
     afterChange: [getAuditLogHook('plans')],
     afterDelete: [getAuditLogDeleteHook('plans')],
   },
@@ -86,6 +88,12 @@ const Plans: CollectionConfig = {
       type: 'relationship',
       relationTo: 'companies',
       required: true,
+      access: {
+        update: () => false, // Prevent manual modification
+      },
+      admin: {
+        hidden: true, // Hide from admin UI
+      },
     },
   ],
 }

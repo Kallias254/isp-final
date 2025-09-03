@@ -1,5 +1,5 @@
 import { Payload } from 'payload';
-import axios from 'axios'; // Import axios
+import axios, { AxiosResponse } from 'axios'; // Import axios
 
 interface SendNotificationArgs {
   payload: Payload;
@@ -11,14 +11,14 @@ interface SendNotificationArgs {
   bulkSend?: boolean;
   deviceToken?: string; // Required for 'push' notifications
   title?: string; // Optional title for push notifications
-  data?: Record<string, any>; // Optional data payload for push notifications
+  data?: Record<string, unknown>; // Optional data payload for push notifications
   ispOwner: string | { id: string }; // Add ispOwner here
 }
 
 export const sendNotification = async ({ payload, recipient, type, content, triggerEvent, sentBy, bulkSend, deviceToken, title, data, ispOwner }: SendNotificationArgs) => {
   try {
     let status: 'sent' | 'failed' = 'sent';
-    let externalServiceResponse: any;
+    let externalServiceResponse: AxiosResponse;
 
     if (type === 'push') {
       if (!deviceToken) {
@@ -44,7 +44,7 @@ export const sendNotification = async ({ payload, recipient, type, content, trig
             payload.logger.error(`Push Notification Service error: ${externalServiceResponse.data.message}`);
             status = 'failed';
           }
-        } catch (fetchError: any) {
+        } catch (fetchError: unknown) {
           payload.logger.error(`Error calling Push Notification Service:`);
           payload.logger.error(fetchError);
           status = 'failed';
@@ -73,7 +73,7 @@ export const sendNotification = async ({ payload, recipient, type, content, trig
     });
 
     payload.logger.info(`Notification logged in Messages collection for ${recipient} with status ${status}`);
-  } catch (error: any) {
-    payload.logger.error(`Error sending or logging notification to ${recipient} for event ${triggerEvent}: ${error.message}`);
+  } catch (error: unknown) {
+    payload.logger.error(`Error sending or logging notification to ${recipient} for event ${triggerEvent}: ${(error as Error).message}`);
   }
 };

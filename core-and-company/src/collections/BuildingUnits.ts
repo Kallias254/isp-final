@@ -1,6 +1,7 @@
 import { CollectionConfig } from 'payload/types';
 import { isAdminOrHasPermission } from '../utils/access';
 import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
+import { setIspOwnerHook } from '../hooks/setIspOwner';
 
 const BuildingUnits: CollectionConfig = {
   slug: 'buildingUnits',
@@ -8,14 +9,15 @@ const BuildingUnits: CollectionConfig = {
     useAsTitle: 'unitNumber',
   },
   hooks: {
+    beforeChange: [setIspOwnerHook],
     afterChange: [getAuditLogHook('buildingUnits')],
     afterDelete: [getAuditLogDeleteHook('buildingUnits')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'building-units'),
-    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'building-units'),
-    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'building-units'),
-    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'building-units'),
+    read: isAdminOrHasPermission('read', 'building-units'),
+    create: isAdminOrHasPermission('create', 'building-units'),
+    update: isAdminOrHasPermission('update', 'building-units'),
+    delete: isAdminOrHasPermission('delete', 'building-units'),
   },
   fields: [
     {
@@ -63,6 +65,12 @@ const BuildingUnits: CollectionConfig = {
       type: 'relationship',
       relationTo: 'companies',
       required: true,
+      access: {
+        update: () => false, // Prevent manual modification
+      },
+      admin: {
+        hidden: true, // Hide from admin UI
+      },
     },
   ],
 };

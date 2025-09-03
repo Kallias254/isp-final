@@ -2,6 +2,7 @@
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrHasPermission } from '../utils/access'
 import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook'
+import { setIspOwnerHook } from '../hooks/setIspOwner';
 
 const Staff: CollectionConfig = {
   slug: 'staff',
@@ -10,6 +11,7 @@ const Staff: CollectionConfig = {
     useAsTitle: 'fullName',
   },
   hooks: {
+    beforeChange: [setIspOwnerHook],
     afterChange: [getAuditLogHook('staff')],
     afterDelete: [getAuditLogDeleteHook('staff')],
   },

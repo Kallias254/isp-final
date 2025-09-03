@@ -1,6 +1,7 @@
 import { CollectionConfig } from 'payload/types';
 import { isAdminOrHasPermission } from '../utils/access';
 import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
+import { setIspOwnerHook } from '../hooks/setIspOwner';
 
 const NetworkDevices: CollectionConfig = {
   slug: 'network-devices',
@@ -8,6 +9,7 @@ const NetworkDevices: CollectionConfig = {
     useAsTitle: 'deviceName',
   },
   hooks: {
+    beforeChange: [setIspOwnerHook],
     afterChange: [
       getAuditLogHook('network-devices'),
       async ({ req, doc, operation }) => {
@@ -36,10 +38,10 @@ const NetworkDevices: CollectionConfig = {
     afterDelete: [getAuditLogDeleteHook('network-devices')],
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'network-devices'),
-    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'network-devices'),
-    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'network-devices'),
-    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'network-devices'),
+    read: isAdminOrHasPermission('read', 'network-devices'),
+    create: isAdminOrHasPermission('create', 'network-devices'),
+    update: isAdminOrHasPermission('update', 'network-devices'),
+    delete: isAdminOrHasPermission('delete', 'network-devices'),
   },
   fields: [
     {
@@ -99,6 +101,12 @@ const NetworkDevices: CollectionConfig = {
         name: 'ispOwner',
         type: 'relationship',
         relationTo: 'companies',
+        access: {
+          update: () => false, // Prevent manual modification
+        },
+        admin: {
+          hidden: true, // Hide from admin UI
+        },
     },
   ],
 };

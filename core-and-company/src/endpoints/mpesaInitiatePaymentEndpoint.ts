@@ -73,10 +73,9 @@ const mpesaInitiatePaymentEndpoint: Endpoint = {
 
       payload.logger.info(`M-Pesa STK Push initiated for subscriber ${subscriber.id} with amount ${amount}`);
       return res.status(200).json({ message: 'M-Pesa STK Push initiated successfully' });
-    } catch (error: any) {
-      payload.logger.error('Error initiating M-Pesa payment:');
-      payload.logger.error(error);
-      return res.status(500).json({ message: 'Internal server error', error: error.message });
+    } catch (error: unknown) {
+      payload.logger.error(`Error initiating M-Pesa payment: ${(error as Error).message}`);
+      return res.status(500).json({ message: 'Internal server error', error: (error as Error).message });
     }
   },
 };

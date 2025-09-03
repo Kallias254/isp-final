@@ -1,6 +1,7 @@
 import { CollectionConfig } from 'payload/types';
 import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
 import { isAdminOrHasPermission } from '../utils/access';
+import { setIspOwnerHook } from '../hooks/setIspOwner';
 
 const Leads: CollectionConfig = {
   slug: 'leads',
@@ -8,87 +9,15 @@ const Leads: CollectionConfig = {
     useAsTitle: 'subscriberName',
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'leads'),
-    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'leads'),
-    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'leads'),
-    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'leads'),
+    read: isAdminOrHasPermission('read', 'leads'),
+    create: isAdminOrHasPermission('create', 'leads'),
+    update: isAdminOrHasPermission('update', 'leads'),
+    delete: isAdminOrHasPermission('delete', 'leads'),
   },
-  fields: [
-    {
-      name: 'status',
-      type: 'select',
-      options: [
-        { label: 'New', value: 'new' },
-        { label: 'Contacted', value: 'contacted' },
-        { label: 'Site Survey', value: 'site-survey' },
-        { label: 'Converted', value: 'converted' },
-        { label: 'Lost', value: 'lost' },
-      ],
-      required: true,
-    },
-    {
-      name: 'leadSource',
-      type: 'select',
-      options: [
-        { label: 'Partner Referral', value: 'partner-referral' },
-        { label: 'Website', value: 'website' },
-        { label: 'Direct Call', value: 'direct-call' },
-      ],
-      required: true,
-    },
-    {
-      name: 'referredBy',
-      type: 'relationship',
-      relationTo: 'partners',
-      hasMany: false,
-      admin: {
-        condition: (_, siblingData) => siblingData?.leadSource === 'partner-referral',
-      },
-    },
-    {
-      name: 'subscriberName',
-      type: 'text',
-      required: true,
-    },
-    {
-      name: 'subscriberPhone',
-      type: 'text',
-      required: true,
-    },
-    {
-      name: 'serviceLocation',
-      type: 'relationship',
-      relationTo: 'buildingUnits',
-      hasMany: false,
-      required: true,
-    },
-    {
-      name: 'preferredPlan',
-      type: 'relationship',
-      relationTo: 'plans',
-      hasMany: false,
-    },
-    {
-      name: 'preferredBillingCycle',
-      type: 'select',
-      options: [
-        { label: 'Monthly', value: 'monthly' },
-        { label: 'Quarterly', value: 'quarterly' },
-      ],
-    },
-    {
-      name: 'notes',
-      type: 'richText',
-    },
-    {
-      name: 'ispOwner',
-      type: 'relationship',
-      relationTo: 'companies',
-      required: true,
-    },
-  ],
   hooks: {
+    beforeChange: [setIspOwnerHook],
     afterChange: [
+      getAuditLogHook('leads'),
       async ({ req, doc, previousDoc }) => {
         // Check if status changed to 'Converted'
         if (doc.status === 'converted' && previousDoc.status !== 'converted') {
@@ -142,6 +71,77 @@ const Leads: CollectionConfig = {
     ],
     afterDelete: [getAuditLogDeleteHook('leads')],
   },
+  fields: [
+    {
+        name: 'ispOwner',
+        type: 'relationship',
+        relationTo: 'companies',
+        required: true,
+        access: {
+            update: () => false,
+        },
+        admin: {
+            hidden: true,
+        },
+    },
+    {
+        name: 'subscriberName',
+        type: 'text',
+        required: true,
+    },
+    {
+        name: 'subscriberPhone',
+        type: 'text',
+        required: true,
+    },
+    {
+        name: 'status',
+        type: 'select',
+        options: [
+            { label: 'New', value: 'new' },
+            { label: 'Contacted', value: 'contacted' },
+            { label: 'Qualified', value: 'qualified' },
+            { label: 'Converted', value: 'converted' },
+            { label: 'Lost', value: 'lost' },
+        ],
+        defaultValue: 'new',
+    },
+    {
+        name: 'leadSource',
+        type: 'select',
+        options: [
+            { label: 'Partner Referral', value: 'partner-referral' },
+            { label: 'Direct', value: 'direct' },
+            { label: 'Marketing Campaign', value: 'marketing-campaign' },
+        ],
+    },
+    {
+        name: 'referredBy',
+        type: 'relationship',
+        relationTo: 'partners',
+        admin: {
+            condition: data => data.leadSource === 'partner-referral',
+        },
+    },
+    {
+        name: 'preferredPlan',
+        type: 'relationship',
+        relationTo: 'plans',
+    },
+    {
+        name: 'preferredBillingCycle',
+        type: 'select',
+        options: [
+            { label: 'Monthly', value: 'monthly' },
+            { label: 'Quarterly', value: 'quarterly' },
+            { label: 'Annually', value: 'annually' },
+        ],
+    },
+    {
+        name: 'notes',
+        type: 'textarea',
+    },
+  ],
 };
 
 export default Leads;

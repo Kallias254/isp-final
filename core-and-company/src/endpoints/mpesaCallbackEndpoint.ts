@@ -23,13 +23,11 @@ const mpesaCallbackEndpoint: Endpoint = {
     const TransAmount = getValue('Amount');
     const TransID = getValue('MpesaReceiptNumber');
     const BillRefNumber = getValue('BillRefNumber');
-    const MSISDN = getValue('PhoneNumber');
     const InvoiceNumber = null; // This is not provided in the mock callback
 
     const accountNumber = BillRefNumber || InvoiceNumber;
     const amountPaid = parseFloat(TransAmount);
     const paymentReference = TransID;
-    const mpesaPhoneNumber = MSISDN;
 
     if (!accountNumber || isNaN(amountPaid) || !paymentReference) {
       payload.logger.error('Missing or invalid Mpesa callback data');
@@ -62,8 +60,8 @@ const mpesaCallbackEndpoint: Endpoint = {
             });
           }
         }
-      } catch (error: any) {
-        payload.logger.error(`Error finding invoice by invoiceNumber ${BillRefNumber}: ${error.message}`);
+      } catch (error: unknown) {
+        payload.logger.error(`Error finding invoice by invoiceNumber ${BillRefNumber}: ${(error as Error).message}`);
       }
 
       // 2. If no specific invoice found, fallback to finding subscriber by accountNumber
@@ -109,8 +107,8 @@ const mpesaCallbackEndpoint: Endpoint = {
               // If no open invoice, still proceed as advance payment for the subscriber
             }
           }
-        } catch (error: any) {
-          payload.logger.error(`Error finding subscriber by accountNumber ${BillRefNumber}: ${error.message}`);
+        } catch (error: unknown) {
+          payload.logger.error(`Error finding subscriber by accountNumber ${BillRefNumber}: ${(error as Error).message}`);
         }
       }
 
@@ -122,7 +120,7 @@ const mpesaCallbackEndpoint: Endpoint = {
       // Now, targetInvoice and targetSubscriber are determined. Proceed with payment processing.
 
       // 3. Create a new Payment record
-      const newPayment = await payload.create({
+      await payload.create({
         collection: 'payments',
         data: {
           paymentReference: paymentReference,
@@ -153,14 +151,14 @@ const mpesaCallbackEndpoint: Endpoint = {
       }
 
       // 5. Update Subscriber's accountBalance and nextDueDate
-      let updatedAccountBalance = (targetSubscriber.accountBalance || 0) - amountPaid;
+      const updatedAccountBalance = (targetSubscriber.accountBalance || 0) - amountPaid;
       let newNextDueDate = targetSubscriber.nextDueDate;
 
       // Advance next due date only if the invoice is fully paid
       if (targetInvoice && (targetInvoice.amountDue - amountPaid) <= 0) {
           const servicePlan = targetSubscriber.servicePlan;
           if (servicePlan && typeof servicePlan === 'object' && 'billingCycle' in servicePlan) {
-            let currentDueDate = new Date(targetSubscriber.nextDueDate);
+            const currentDueDate = new Date(targetSubscriber.nextDueDate);
             if (servicePlan.billingCycle === 'monthly') {
               newNextDueDate = addMonths(currentDueDate, 1).toISOString();
             } else if (servicePlan.billingCycle === 'quarterly') {
@@ -181,9 +179,9 @@ const mpesaCallbackEndpoint: Endpoint = {
       payload.logger.info(`Subscriber ${targetSubscriber.id} account balance and nextDueDate updated.`);
 
       return res.status(200).json({ message: 'Mpesa callback processed successfully' });
-    } catch (error: any) {
-      payload.logger.error(`Error processing Mpesa callback: ${error.message}`);
-      return res.status(500).json({ message: 'Internal server error', error: error.message });
+    } catch (error: unknown) {
+      payload.logger.error(`Error processing Mpesa callback: ${(error as Error).message}`);
+      return res.status(500).json({ message: 'Internal server error', error: (error as Error).message });
     }
   },
 };

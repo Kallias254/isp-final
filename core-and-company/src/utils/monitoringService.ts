@@ -1,5 +1,11 @@
 import { Payload } from 'payload';
-import { NetworkDevice, Subscriber } from '../payload-types'; // Import necessary types
+import { NetworkDevice, Subscriber, Ticket } from '../payload-types'; // Import necessary types
+
+interface WebhookRequest {
+  body: {
+    deviceIp?: string;
+  };
+}
 
 export class MonitoringService {
   private payload: Payload;
@@ -8,7 +14,7 @@ export class MonitoringService {
     this.payload = payload;
   }
 
-  async handleWebhook(req: any): Promise<void> {
+  async handleWebhook(req: WebhookRequest): Promise<void> {
     this.payload.logger.info('Monitoring webhook received');
 
     // 1. Extract the device IP from the webhook body (assuming LibreNMS sends 'deviceIp')
@@ -62,7 +68,7 @@ export class MonitoringService {
     this.payload.logger.info(`CrisisEvent ${crisisEvent.id} created for device ${rootDevice.deviceName}.`);
 
     // 5. Create High-Priority Ticket
-    const ticketData: any = {
+    const ticketData: Partial<Ticket> = {
       ticketID: `TKT-CRISIS-${Date.now()}`,
       subject: `Network Alert: Device '${rootDevice.deviceName}' is Offline. (${rootDevice.deviceType})`,
       description: [

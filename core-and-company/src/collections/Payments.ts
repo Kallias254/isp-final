@@ -2,6 +2,7 @@ import { CollectionConfig } from 'payload/types';
 import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
 import { sendNotification } from '../utils/notificationService'; // Import sendNotification
 import { isAdminOrHasPermission } from '../utils/access';
+import { setIspOwnerHook } from '../hooks/setIspOwner';
 
 const Payments: CollectionConfig = {
   slug: 'payments',
@@ -9,58 +10,15 @@ const Payments: CollectionConfig = {
     useAsTitle: 'paymentReference',
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'payments'),
-    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'payments'),
-    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'payments'),
-    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'payments'),
+    read: isAdminOrHasPermission('read', 'payments'),
+    create: isAdminOrHasPermission('create', 'payments'),
+    update: isAdminOrHasPermission('update', 'payments'),
+    delete: isAdminOrHasPermission('delete', 'payments'),
   },
-  fields: [
-    {
-      name: 'paymentReference',
-      type: 'text',
-      required: true,
-    },
-    {
-      name: 'invoice',
-      type: 'relationship',
-      relationTo: 'invoices',
-      hasMany: false,
-      required: false,
-    },
-    {
-      name: 'amountPaid',
-      type: 'number',
-      required: true,
-    },
-    {
-      name: 'paymentMethod',
-      type: 'select',
-      options: [
-        { label: 'Mpesa', value: 'mpesa' },
-        { label: 'Bank Transfer', value: 'bank-transfer' },
-        { label: 'Cash', value: 'cash' },
-      ],
-      required: true,
-    },
-    {
-      name: 'paymentDate',
-      type: 'date',
-      required: true,
-      admin: {
-        date: {
-          pickerAppearance: 'dayOnly',
-        },
-      },
-    },
-    {
-      name: 'ispOwner',
-      type: 'relationship',
-      relationTo: 'companies',
-      required: true,
-    },
-  ],
   hooks: {
+    beforeChange: [setIspOwnerHook],
     afterChange: [
+      getAuditLogHook('payments'),
       async ({ req, doc, operation }) => {
         // Check if a new payment was created
         if (operation === 'create') {
@@ -130,8 +88,8 @@ const Payments: CollectionConfig = {
               //   username: subscriber.accountNumber,
               // });
               payload.logger.info(`FreeRADIUS API call simulated for reconnection of Subscriber ${subscriber.id}`);
-            } catch (radiusError: any) {
-              payload.logger.error(`Error calling FreeRADIUS API for reconnection of Subscriber ${subscriber.id}: ${radiusError.message}`);
+            } catch (radiusError: unknown) {
+              payload.logger.error(`Error calling FreeRADIUS API for reconnection of Subscriber ${subscriber.id}: ${(radiusError as Error).message}`);
               // Log error, potentially notify admin
               return doc;
             }
@@ -173,6 +131,52 @@ const Payments: CollectionConfig = {
     ],
     afterDelete: [getAuditLogDeleteHook('payments')],
   },
+  fields: [
+    {
+        name: 'ispOwner',
+        type: 'relationship',
+        relationTo: 'companies',
+        required: true,
+        access: {
+            update: () => false,
+        },
+        admin: {
+            hidden: true,
+        },
+    },
+    {
+        name: 'paymentReference',
+        type: 'text',
+        required: true,
+        unique: true,
+    },
+    {
+        name: 'invoice',
+        type: 'relationship',
+        relationTo: 'invoices',
+        required: true,
+    },
+    {
+        name: 'amountPaid',
+        type: 'number',
+        required: true,
+    },
+    {
+        name: 'paymentDate',
+        type: 'date',
+        required: true,
+    },
+    {
+        name: 'paymentMethod',
+        type: 'select',
+        options: [
+            { label: 'M-Pesa', value: 'mpesa' },
+            { label: 'Bank Transfer', value: 'bank-transfer' },
+            { label: 'Cash', value: 'cash' },
+        ],
+        required: true,
+    },
+  ],
 };
 
 export default Payments;

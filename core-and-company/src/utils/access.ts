@@ -1,47 +1,58 @@
-import { Staff, Role } from '../payload-types';
+import { Staff } from '../payload-types';
+import { Access, AccessArgs } from 'payload/types';
 
-export const isAdmin = ({ req }): boolean => {
-  const user = req.user as Staff | undefined;
+type PermissionType = 'create' | 'read' | 'update' | 'delete';
 
-  if (!user) {
-    return false;
+export const isSuperAdmin = (user: Staff | undefined): boolean => {
+  if (!user) return false;
+  if (user.assignedRole && typeof user.assignedRole === 'object' && user.assignedRole.permissions) {
+    const permissions = user.assignedRole.permissions;
+    const rolesPermission = permissions.find(p => p.collection === 'roles');
+    if (rolesPermission && rolesPermission.read) {
+      return true;
+    }
   }
-
-  // This check assumes a simple 'admin' role name. Adjust if your admin check is different.
-  if (user.assignedRole && typeof user.assignedRole === 'object' && user.assignedRole.name === 'Admin') {
-    return true;
-  }
-
   return false;
 }
 
-export const isAdminOrHasPermission = async (req: any, action: 'read' | 'create' | 'update' | 'delete', collection: string): Promise<boolean> => {
-  const user = req.user as Staff | undefined; // Cast user to Staff type
+export const isAdminOrHasPermission = (
+  action: PermissionType,
+  collectionSlug: string
+): Access => {
+  return async ({ req }: AccessArgs) => {
+    const user = req.user as Staff | undefined;
 
-  // If user is not logged in, deny access
-  if (!user) {
-    return false;
-  }
-
-  // If user is an admin (assuming 'admin' is a special role name or a flag on the user)
-  // This check assumes a simple 'admin' role name. Adjust if your admin check is different.
-  if (user.assignedRole && typeof user.assignedRole === 'object' && user.assignedRole.name === 'Admin') {
-    return true;
-  }
-
-  // If user has an assigned role, check its permissions
-  if (user.assignedRole && typeof user.assignedRole === 'object' && user.assignedRole.permissions) {
-    const permissions = user.assignedRole.permissions;
-
-    // Find permissions for the specific collection
-    const collectionPermissions = permissions.find(p => p.collection === collection);
-
-    if (collectionPermissions) {
-      // Check if the specific action is allowed for this collection
-      return collectionPermissions[action];
+    if (!user) {
+      return false;
     }
-  }
 
-  // If no specific permission found or role not assigned, deny access
-  return false;
+    // Super Admins have unrestricted access
+    if (isSuperAdmin(user)) {
+      return true;
+    }
+
+    // Check for user role and permissions
+    if (user.assignedRole && typeof user.assignedRole === 'object' && user.assignedRole.permissions) {
+      const permissions = user.assignedRole.permissions;
+      const collectionPermissions = permissions.find(p => p.collection === collectionSlug);
+
+      if (collectionPermissions && collectionPermissions[action]) {
+        // For 'read' operations, return a query constraint to filter by ispOwner
+        if (action === 'read') {
+          return {
+            ispOwner: {
+              equals: user.ispOwner,
+            },
+          };
+        }
+        // For 'create', 'update', 'delete', allow the operation.
+        // The beforeChange hook will ensure the ispOwner is set correctly on create.
+        // For update/delete, Payload's default behavior + read access query ensures they can only affect their own documents.
+        return true;
+      }
+    }
+
+    // Deny access if no matching permission is found
+    return false;
+  };
 };

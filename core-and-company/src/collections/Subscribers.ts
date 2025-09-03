@@ -1,14 +1,7 @@
 import { CollectionConfig } from 'payload/types';
 import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
-import { sendNotification } from '../utils/notificationService'; // Correctly placed import
 import { isAdminOrHasPermission } from '../utils/access';
-import { Subscriber } from '../payload-types'; // Import Subscriber type
-
-interface InvoiceLineItem {
-  description: string;
-  quantity: number;
-  price: number;
-}
+import { setIspOwnerHook } from '../hooks/setIspOwner';
 
 const Subscribers: CollectionConfig = {
   slug: 'subscribers',
@@ -16,211 +9,14 @@ const Subscribers: CollectionConfig = {
     useAsTitle: 'accountNumber',
   },
   access: {
-    read: ({ req }) => isAdminOrHasPermission(req, 'read', 'subscribers'),
-    create: ({ req }) => isAdminOrHasPermission(req, 'create', 'subscribers'),
-    update: ({ req }) => isAdminOrHasPermission(req, 'update', 'subscribers'),
-    delete: ({ req }) => isAdminOrHasPermission(req, 'delete', 'subscribers'),
+    read: isAdminOrHasPermission('read', 'subscribers'),
+    create: isAdminOrHasPermission('create', 'subscribers'),
+    update: isAdminOrHasPermission('update', 'subscribers'),
+    delete: isAdminOrHasPermission('delete', 'subscribers'),
   },
-  fields: [
-    {
-      name: 'firstName',
-      type: 'text',
-      required: true,
-      access: {
-        update: ({ req: { user } }) => user.email === 'admin@example.com',
-      },
-    },
-    {
-      name: 'lastName',
-      type: 'text',
-      required: true,
-      access: {
-        update: ({ req: { user } }) => user.email === 'admin@example.com',
-      },
-    },
-    {
-      name: 'accountNumber',
-      type: 'text',
-      required: true,
-      unique: true,
-      access: {
-        update: ({ req: { user } }) => user.email === 'admin@example.com',
-      },
-    },
-    {
-      name: 'mpesaNumber',
-      type: 'text',
-      required: true,
-    },
-    {
-      name: 'contactPhone',
-      type: 'text',
-    },
-    {
-      name: 'email',
-      type: 'email',
-    },
-    {
-      name: 'status',
-      type: 'select',
-      options: [
-        { label: 'Pending Installation', value: 'pending-installation' },
-        { label: 'Active', value: 'active' },
-        { label: 'Suspended', value: 'suspended' },
-        { label: 'Deactivated', value: 'deactivated' },
-      ],
-      required: true,
-    },
-    {
-      name: 'servicePlan',
-      type: 'relationship',
-      relationTo: 'plans',
-      hasMany: false,
-    },
-    {
-      name: 'billingCycle',
-      type: 'select',
-      options: [
-        { label: 'Monthly', value: 'monthly' },
-        { label: 'Quarterly', value: 'quarterly' },
-      ],
-    },
-    {
-      name: 'nextDueDate',
-      type: 'date',
-      admin: {
-        date: {
-          pickerAppearance: 'dayOnly',
-        },
-      },
-    },
-    {
-      name: 'accountBalance',
-      type: 'number',
-      defaultValue: 0,
-    },
-    {
-      name: 'gracePeriodEndDate',
-      type: 'date',
-      admin: {
-        date: {
-          pickerAppearance: 'dayOnly',
-        },
-      },
-    },
-    {
-      name: 'trialDays',
-      label: 'Trial Days (optional)',
-      type: 'number',
-      defaultValue: 0,
-      min: 0,
-      access: {
-        update: ({ req: { user } }) => user.email === 'admin@example.com',
-      },
-    },
-    {
-      name: 'trialEndDate',
-      type: 'date',
-      hidden: true, // This field is now managed by the beforeChange hook
-    },
-    {
-      name: 'addressNotes',
-      type: 'textarea',
-    },
-    {
-      name: 'internalNotes',
-      type: 'richText',
-    },
-    {
-      name: 'upfrontCharges',
-      type: 'array',
-      label: 'Upfront Charges',
-      fields: [
-        {
-          name: 'description',
-          type: 'text',
-          required: true,
-        },
-        {
-          name: 'quantity',
-          type: 'number',
-          required: true,
-          min: 1,
-        },
-        {
-          name: 'price',
-          type: 'number',
-          required: true,
-          min: 0,
-        },
-      ],
-      access: {
-        update: ({ req: { user } }) => user.email === 'admin@example.com',
-      },
-      admin: {
-        condition: (_, siblingData) => !siblingData.id || (siblingData.upfrontCharges && siblingData.upfrontCharges.length > 0),
-      },
-    },
-    {
-      name: 'connectionType',
-      type: 'select',
-      options: [
-        { label: 'PPPoE', value: 'pppoe' },
-        { label: 'IPoE/DHCP', value: 'ipoe-dhcp' },
-        { label: 'Static IP', value: 'static-ip' },
-        { label: 'Hotspot', value: 'hotspot' },
-      ],
-    },
-    {
-      name: 'radiusUsername',
-      type: 'text',
-      access: {
-        update: ({ req: { user } }) => user.email === 'admin@example.com',
-      },
-    },
-    {
-      name: 'radiusPassword',
-      type: 'text',
-      access: {
-        create: () => true,
-        update: () => false,
-      },
-      admin: {
-        hidden: true,
-      },
-    },
-    {
-      name: 'assignedIp',
-      type: 'relationship',
-      relationTo: 'ipAddresses',
-      hasMany: false,
-    },
-    {
-      name: 'macAddress',
-      type: 'text',
-    },
-    {
-      name: 'cpeDevice',
-      type: 'relationship',
-      relationTo: 'network-devices',
-      hasMany: false,
-    },
-    {
-      name: 'deviceToken', // New field for push notifications
-      type: 'text',
-      admin: {
-        description: 'Device token for sending push notifications to the subscriber\'s app.',
-      },
-    },
-    {
-      name: 'ispOwner',
-      type: 'relationship',
-      relationTo: 'companies',
-      required: true,
-    },
-  ],
   hooks: {
     beforeChange: [
+      setIspOwnerHook,
       async ({ data, operation }) => {
         // On create, if trialDays are provided, calculate the trialEndDate and nextDueDate
         if (operation === 'create' && data.trialDays && data.trialDays > 0) {
@@ -236,9 +32,10 @@ const Subscribers: CollectionConfig = {
       },
     ],
     afterChange: [
+      getAuditLogHook('subscribers'),
       // On create, if it's a trial signup with upfront charges, create an invoice for those charges
       async ({ doc, operation, req }) => {
-        const { payload } = req as any;
+        const { payload } = req;
         if (operation === 'create' && doc.trialDays > 0 && doc.upfrontCharges && doc.upfrontCharges.length > 0) {
           const { upfrontCharges, id: subscriberId } = doc;
 
@@ -264,7 +61,177 @@ const Subscribers: CollectionConfig = {
         }
       },
     ],
+    afterDelete: [getAuditLogDeleteHook('subscribers')],
   },
+  fields: [
+    {
+        name: 'ispOwner',
+        type: 'relationship',
+        relationTo: 'companies',
+        required: true,
+        access: {
+            update: () => false,
+        },
+        admin: {
+            hidden: true,
+        },
+    },
+    {
+      name: 'accountNumber',
+      type: 'text',
+      required: true,
+      unique: true,
+    },
+    {
+      name: 'firstName',
+      type: 'text',
+      required: true,
+    },
+    {
+      name: 'lastName',
+      type: 'text',
+      required: true,
+    },
+    {
+      name: 'contactPhone',
+      type: 'text',
+      required: true,
+    },
+    {
+      name: 'email',
+      type: 'email',
+    },
+    {
+      name: 'mpesaNumber',
+      type: 'text',
+    },
+    {
+      name: 'status',
+      type: 'select',
+      options: [
+        { label: 'Active', value: 'active' },
+        { label: 'Suspended', value: 'suspended' },
+        { label: 'Pending Installation', value: 'pending-installation' },
+        { label: 'Disconnected', value: 'disconnected' },
+      ],
+      defaultValue: 'pending-installation',
+      required: true,
+    },
+    {
+      name: 'servicePlan',
+      type: 'relationship',
+      relationTo: 'plans',
+      required: true,
+    },
+    {
+      name: 'billingCycle',
+      type: 'select',
+      options: [
+        { label: 'Monthly', value: 'monthly' },
+        { label: 'Quarterly', value: 'quarterly' },
+        { label: 'Annually', value: 'annually' },
+      ],
+      required: true,
+    },
+    {
+      name: 'nextDueDate',
+      type: 'date',
+      required: true,
+    },
+    {
+      name: 'accountBalance',
+      type: 'number',
+      defaultValue: 0,
+    },
+    {
+      name: 'lastPaymentDate',
+      type: 'date',
+    },
+    {
+      name: 'trialDays',
+      type: 'number',
+      admin: {
+        description: 'Number of trial days for new signups',
+      },
+    },
+    {
+      name: 'trialEndDate',
+      type: 'date',
+      admin: {
+        readOnly: true,
+      },
+    },
+    {
+      name: 'upfrontCharges',
+      type: 'array',
+      fields: [
+        {
+          name: 'description',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'quantity',
+          type: 'number',
+          required: true,
+        },
+        {
+          name: 'price',
+          type: 'number',
+          required: true,
+        },
+      ],
+    },
+    {
+      name: 'addressNotes',
+      type: 'textarea',
+    },
+    {
+      name: 'connectionType',
+      type: 'select',
+      options: [
+        { label: 'Fiber', value: 'fiber' },
+        { label: 'Wireless', value: 'wireless' },
+      ],
+    },
+    {
+      name: 'assignedIp',
+      type: 'text',
+      admin: {
+        readOnly: true,
+      },
+    },
+    {
+      name: 'cpeDevice',
+      type: 'relationship',
+      relationTo: 'network-devices',
+      admin: {
+        description: 'Customer Premise Equipment assigned to this subscriber',
+      },
+    },
+    {
+      name: 'radiusPassword',
+      type: 'text',
+      admin: {
+        readOnly: true,
+        description: 'Auto-generated RADIUS password',
+      },
+    },
+    {
+      name: 'deviceToken',
+      type: 'text',
+      admin: {
+        hidden: true,
+      },
+    },
+    {
+      name: 'gracePeriodEndDate',
+      type: 'date',
+      admin: {
+        description: 'Date until which service remains active despite overdue payment',
+      },
+    },
+  ],
 };
 
 export default Subscribers;

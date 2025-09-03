@@ -1,10 +1,9 @@
 import { Endpoint } from 'payload/config';
-import { MonitoringService } from '../utils/monitoringService';
 
 const subscriberConnectionStatusEndpoint: Endpoint = {
   path: '/api/subscribers/:id/connection-status',
   method: 'get',
-  handler: async (req, res, next) => {
+  handler: async (req, res) => {
     try {
       const subscriberId = req.params.id;
       const { payload } = req;
@@ -24,10 +23,7 @@ const subscriberConnectionStatusEndpoint: Endpoint = {
         return res.status(404).send({ error: 'Subscriber does not have an assigned CPE device' });
       }
 
-      const cpeDeviceId = subscriber.cpeDevice.id;
-
       // 2. Use MonitoringService to get real-time metrics for the CPE device
-      const monitoringService = new MonitoringService(payload);
       // TODO: Implement a method in MonitoringService to fetch real-time metrics from LibreNMS
       // For now, return dummy data
       const metrics = {
@@ -40,8 +36,8 @@ const subscriberConnectionStatusEndpoint: Endpoint = {
 
       return res.status(200).send(metrics);
 
-    } catch (error: any) {
-      req.payload.logger.error(`Error fetching subscriber connection status: ${error.message}`);
+    } catch (error: unknown) {
+      req.payload.logger.error(`Error fetching subscriber connection status: ${(error as Error).message}`);
       return res.status(500).send({ error: 'Internal server error' });
     }
   },

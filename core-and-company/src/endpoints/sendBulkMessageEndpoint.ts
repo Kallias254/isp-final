@@ -2,6 +2,10 @@ import { Payload } from 'payload';
 import { Endpoint } from 'payload/config';
 import { sendNotification } from '../utils/notificationService';
 
+interface WhereClause {
+  [key: string]: { in: string[] };
+}
+
 const sendBulkMessageEndpoint: Endpoint = {
   path: '/send-bulk-message',
   method: 'post',
@@ -14,12 +18,12 @@ const sendBulkMessageEndpoint: Endpoint = {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    let recipients: any[] = [];
+    let recipients: string[] = [];
 
     try {
       if (audienceType === 'registered') {
         // Build query for Subscribers based on filters
-        const whereClause: any = {};
+        const whereClause: WhereClause = {};
         if (filters) {
           if (filters.plans && filters.plans.length > 0) {
             whereClause['servicePlan'] = { in: filters.plans };
@@ -50,7 +54,7 @@ const sendBulkMessageEndpoint: Endpoint = {
       }
 
       // Create a single parent Message log for the bulk send
-      const parentMessage = await payload.create({
+      await payload.create({
         collection: 'messages',
         data: {
           recipient: 'Bulk Send',
@@ -79,9 +83,9 @@ const sendBulkMessageEndpoint: Endpoint = {
       }
 
       return res.status(200).json({ message: `Bulk message sent to ${recipients.length} recipients` });
-    } catch (error: any) {
-      payload.logger.error(`Error sending bulk message: ${error.message}`);
-      return res.status(500).json({ message: 'Internal server error', error: error.message });
+    } catch (error: unknown) {
+      payload.logger.error(`Error sending bulk message: ${(error as Error).message}`);
+      return res.status(500).json({ message: 'Internal server error', error: (error as Error).message });
     }
   },
 };

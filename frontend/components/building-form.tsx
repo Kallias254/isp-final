@@ -28,7 +28,7 @@ const buildingFormSchema = z.object({
 
 type BuildingFormValues = z.infer<typeof buildingFormSchema>
 
-export function BuildingForm({ building }: { building?: any }) {
+export function BuildingForm({ building, onSuccess }: { building?: any, onSuccess?: () => void }) {
   const router = useRouter()
   const form = useForm<BuildingFormValues>({
     resolver: zodResolver(buildingFormSchema),
@@ -61,8 +61,12 @@ export function BuildingForm({ building }: { building?: any }) {
         description: `Successfully ${building ? 'updated' : 'created'} the building.`,
       })
 
-      router.push('/dashboard/crm/buildings')
-      router.refresh() // To see the changes in the list
+      if (onSuccess) {
+        onSuccess()
+      } else {
+        router.push('/dashboard/crm/buildings')
+        router.refresh() // To see the changes in the list
+      }
     } catch (error) {
       toast({
         title: 'Error',
@@ -133,7 +137,7 @@ export function BuildingForm({ building }: { building?: any }) {
                 )}
             />
             <div className='flex justify-end gap-2'>
-              <Button type='button' variant='outline' onClick={() => router.back()}>
+              <Button type='button' variant='outline' onClick={() => onSuccess ? onSuccess() : router.back()}>
                 Cancel
               </Button>
               <Button type='submit'>{building ? 'Update' : 'Create'} Building</Button>

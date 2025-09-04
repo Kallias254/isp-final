@@ -31,31 +31,23 @@ const Buildings: CollectionConfig = {
       type: 'upload',
       relationTo: 'media',
     },
-    {
-      name: 'address',
-      type: 'text',
+        {
+      name: 'location',
+      type: 'relationship',
+      relationTo: 'service-locations',
       required: true,
     },
     {
       name: 'status',
       type: 'select',
       options: [
-        { label: 'Prospecting', value: 'prospecting' },
-        { label: 'Negotiating', value: 'negotiating' },
-        { label: 'Active', value: 'active' },
-        { label: 'Lost', value: 'lost' },
+        'active',
+        'prospecting',
+        'negotiating',
+        'on-hold',
       ],
+      defaultValue: 'prospecting',
       required: true,
-    },
-    {
-      name: 'partner',
-      type: 'relationship',
-      relationTo: 'partners',
-      hasMany: false,
-    },
-    {
-      name: 'location',
-      type: 'point',
     },
     {
       name: 'equipment',

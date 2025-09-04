@@ -1,7 +1,6 @@
-"use client";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { NetworkDevice, ServiceLocation } from "@/payload-types";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,16 +9,37 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { networkDevices } from "./mock-data";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function NetworkDeviceDetailPage({ params }: { params: { id: string } }) {
-  const device = networkDevices.find((d) => d.id === params.id);
+async function getDevice(id: string, token: string | undefined): Promise<NetworkDevice | null> {
+  if (!token) {
+    return null;
+  }
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_PAYLOAD_API_URL}/api/network-devices/${id}?depth=1`,
+    {
+      headers: {
+        Authorization: `JWT ${token}`,
+      },
+    }
+  );
+  if (!res.ok) {
+    return null;
+  }
+  const data = await res.json();
+  return data;
+}
+
+export default async function NetworkDeviceDetailPage({ params }: { params: { id: string } }) {
+  const nextCookies = cookies();
+  const token = nextCookies.get("payload-token")?.value;
+  const device = await getDevice(params.id, token);
 
   if (!device) {
     notFound();
   }
+
+  const physicalLocation = device.physicalLocation as ServiceLocation;
 
   return (
     <div className="container mx-auto py-10">
@@ -34,7 +54,7 @@ export default function NetworkDeviceDetailPage({ params }: { params: { id: stri
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard/operations/network-devices">Network Devices</BreadcrumbLink>
+            <BreadcrumbLink href="/dashboard/operations/network-devices">Device Inventory</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -42,42 +62,46 @@ export default function NetworkDeviceDetailPage({ params }: { params: { id: stri
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="flex justify-between items-center my-4">
-        <div>
-          <h1 className="text-2xl font-bold">{device.deviceName}</h1>
-          <p className="text-muted-foreground">Network Device Details</p>
-        </div>
-        <div className="flex gap-2">
-          <Link href="/dashboard/operations/network-devices">
-            <Button variant="outline">Back</Button>
-          </Link>
-          <Link href={`/dashboard/operations/network-devices/${device.id}/edit`}>
-            <Button>Edit</Button>
-          </Link>
-        </div>
+      <div className="my-4">
+        <h1 className="text-2xl font-bold">{device.deviceName}</h1>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Device Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p><strong>Type:</strong> {device.deviceType}</p>
-            <p><strong>Purchase Date:</strong> {device.purchaseDate}</p>
-            <p><strong>Purchase Cost:</strong> ${device.purchaseCost}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Monitoring</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p><strong>Monitoring Type:</strong> {device.monitoringType}</p>
-            <p><strong>SNMP Community:</strong> {device.snmpCommunity}</p>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Device Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="font-semibold">Device Type:</p>
+              <p>{device.deviceType}</p>
+            </div>
+            <div>
+              <p className="font-semibold">IP Address:</p>
+              <p>{typeof device.ipAddress === 'object' && device.ipAddress?.ipAddress}</p>
+            </div>
+            <div>
+              <p className="font-semibold">Physical Location:</p>
+              <p>{physicalLocation?.name || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="font-semibold">Monitoring Type:</p>
+              <p>{device.monitoringType}</p>
+            </div>
+            {device.purchaseDate && (
+              <div>
+                <p className="font-semibold">Purchase Date:</p>
+                <p>{new Date(device.purchaseDate).toLocaleDateString()}</p>
+              </div>
+            )}
+            {device.purchaseCost && (
+                <div>
+                    <p className="font-semibold">Purchase Cost:</p>
+                    <p>{device.purchaseCost}</p>
+                </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

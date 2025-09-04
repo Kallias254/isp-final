@@ -23,6 +23,16 @@ const ServiceLocations: CollectionConfig = {
       required: true,
     },
     {
+      name: 'latitude',
+      type: 'number',
+      required: true,
+    },
+    {
+      name: 'longitude',
+      type: 'number',
+      required: true,
+    },
+    {
       name: 'ispOwner',
       type: 'relationship',
       relationTo: 'companies',

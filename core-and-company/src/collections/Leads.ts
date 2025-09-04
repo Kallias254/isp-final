@@ -36,7 +36,8 @@ const Leads: CollectionConfig = {
               billingCycle: doc.preferredBillingCycle || 'monthly', // Pass preferred cycle or default to monthly
               nextDueDate: new Date().toISOString(), // Set to today for now
               accountBalance: 0,
-              addressNotes: doc.notes,
+              internalNotes: doc.notes,
+              serviceAddress: doc.location,
               ispOwner: doc.ispOwner, // Assign ispOwner from the Lead
               // connectionType and assignedIp will be managed by Ops
             },
@@ -142,8 +143,9 @@ const Leads: CollectionConfig = {
         type: 'textarea',
     },
     {
-        name: 'serviceLocation',
-        type: 'text',
+        name: 'location',
+        type: 'relationship',
+        relationTo: 'service-locations',
         required: true,
     },
   ],

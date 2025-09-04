@@ -7,6 +7,7 @@ export const buildings: Building[] = [
         name: "The Grand",
         address: "123 Main St",
         status: "active",
+        location: { id: "1", name: "Tech Hub Tower Location", latitude: -1.286389, longitude: 36.817223, ispOwner: "1", createdAt: "", updatedAt: "" },
         partner: partners[0],
         createdAt: "",
         updatedAt: ""

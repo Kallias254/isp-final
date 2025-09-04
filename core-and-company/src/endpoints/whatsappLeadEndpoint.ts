@@ -38,7 +38,7 @@ const whatsappLeadEndpoint: Endpoint = {
           referredBy: partner.id,
           subscriberName,
           subscriberPhone: phoneNumber,
-          serviceLocation,
+          location: serviceLocation,
           notes,
           ispOwner: partner.ispOwner, // Assign ispOwner from the Partner
         },

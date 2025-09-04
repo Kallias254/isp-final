@@ -9,6 +9,7 @@ export const subscribers: Subscriber[] = [
     mpesaNumber: "254712345678",
     status: "active",
     servicePlan: { id: "1", name: "Basic", downloadSpeed: 10, uploadSpeed: 5, price: 1000, billingCycle: "monthly", ipAssignmentType: "dynamic", planEnabled: true, activeForNewSignups: true, createdAt: "", updatedAt: "" },
+    serviceAddress: { id: "1", name: "Tech Hub Tower Location", latitude: -1.286389, longitude: 36.817223, ispOwner: "1", createdAt: "", updatedAt: "" },
     billingCycle: "monthly",
     nextDueDate: "2025-10-01",
     accountBalance: 0,

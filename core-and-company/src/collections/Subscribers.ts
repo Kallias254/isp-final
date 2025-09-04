@@ -180,8 +180,14 @@ const Subscribers: CollectionConfig = {
       ],
     },
     {
-      name: 'addressNotes',
+      name: 'internalNotes',
       type: 'textarea',
+    },
+    {
+      name: 'serviceAddress',
+      type: 'relationship',
+      relationTo: 'service-locations',
+      required: true,
     },
     {
       name: 'connectionType',

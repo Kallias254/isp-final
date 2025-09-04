@@ -43,6 +43,29 @@ export const seed = async (payload: Payload) => {
   });
   payload.logger.info('Vantage company seeded.');
 
+  // Seed ServiceLocations
+  const serviceLocation1 = await payload.create({
+    collection: 'service-locations',
+    data: {
+      name: 'Tech Hub Tower Location',
+      latitude: -1.286389,
+      longitude: 36.817223,
+      ispOwner: company.id,
+    },
+  });
+  payload.logger.info('Service Location 1 seeded.');
+
+  const serviceLocation2 = await payload.create({
+    collection: 'service-locations',
+    data: {
+      name: 'Innovation Center Location',
+      latitude: -1.292066,
+      longitude: 36.821946,
+      ispOwner: company.id,
+    },
+  });
+  payload.logger.info('Service Location 2 seeded.');
+
   await payload.create({
     collection: 'staff',
     data: {
@@ -92,9 +115,8 @@ export const seed = async (payload: Payload) => {
   payload.logger.info('Plan 2 seeded.');
 
   // Seed Subscribers
-  const sub1 = await payload.create({
+  await payload.create({
     collection: 'subscribers',
-    id: '1',
     data: {
       ispOwner: company.id,
       accountNumber: 'SUB001',
@@ -104,17 +126,16 @@ export const seed = async (payload: Payload) => {
       email: 'alice.smith@example.com',
       status: 'active',
       servicePlan: plan1.id,
+      serviceAddress: serviceLocation1.id,
       billingCycle: 'monthly',
       nextDueDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString(),
       accountBalance: 0,
     },
   });
-  console.log('Seeded subscriber 1:', JSON.stringify(sub1, null, 2));
   payload.logger.info('Subscriber 1 seeded.');
 
-  const sub2 = await payload.create({
+  await payload.create({
     collection: 'subscribers',
-    id: '2',
     data: {
       ispOwner: company.id,
       accountNumber: 'SUB002',
@@ -124,12 +145,12 @@ export const seed = async (payload: Payload) => {
       email: 'bob.johnson@example.com',
       status: 'pending-installation',
       servicePlan: plan2.id,
+      serviceAddress: serviceLocation2.id,
       billingCycle: 'quarterly',
       nextDueDate: new Date(new Date().setDate(new Date().getDate() + 90)).toISOString(),
       accountBalance: 0,
     },
   });
-  console.log('Seeded subscriber 2:', JSON.stringify(sub2, null, 2));
   payload.logger.info('Subscriber 2 seeded.');
 
   // Seed Buildings
@@ -137,7 +158,7 @@ export const seed = async (payload: Payload) => {
     collection: 'buildings',
     data: {
       name: 'Tech Hub Tower',
-      address: '123 Tech Lane, Nairobi',
+      location: serviceLocation1.id,
       status: 'active',
       ispOwner: company.id,
     },
@@ -148,15 +169,15 @@ export const seed = async (payload: Payload) => {
     collection: 'buildings',
     data: {
       name: 'Innovation Center',
-      address: '456 Innovation Drive, Nairobi',
-      status: 'prospecting',
+      location: serviceLocation2.id,
+      status: 'active',
       ispOwner: company.id,
     },
   });
   payload.logger.info('Building 2 seeded.');
 
   // Seed BuildingUnits
-  await payload.create({
+  const unit1 = await payload.create({
     collection: 'buildingUnits',
     data: {
       unitNumber: 'A101',
@@ -167,7 +188,7 @@ export const seed = async (payload: Payload) => {
   });
   payload.logger.info('Building Unit 1 seeded.');
 
-  await payload.create({
+  const unit2 = await payload.create({
     collection: 'buildingUnits',
     data: {
       unitNumber: 'B205',
@@ -188,7 +209,7 @@ export const seed = async (payload: Payload) => {
       status: 'new',
       leadSource: 'direct',
       preferredPlan: plan1.id,
-      serviceLocation: 'Apartment C3, Tech Hub Tower',
+      location: serviceLocation1.id,
     },
   });
   payload.logger.info('Lead 1 seeded.');
@@ -200,9 +221,9 @@ export const seed = async (payload: Payload) => {
       subscriberName: 'Diana Prince',
       subscriberPhone: '+254744556677',
       status: 'contacted',
-      leadSource: 'marketing-campaign',
+      leadSource: 'partner-referral',
       preferredPlan: plan2.id,
-      serviceLocation: 'Office 10, Innovation Center',
+      location: serviceLocation2.id,
     },
   });
   payload.logger.info('Lead 2 seeded.');

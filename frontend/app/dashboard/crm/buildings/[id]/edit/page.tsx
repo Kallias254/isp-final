@@ -9,28 +9,28 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
-import { NetworkDeviceForm } from '@/components/network-device-form'
+import { BuildingForm } from '@/components/building-form'
 import { toast } from '@/components/ui/use-toast'
 
-export default function EditNetworkDevicePage({ params }: { params: { id: string } }) {
-  const [device, setDevice] = React.useState(null)
+export default function EditBuildingPage({ params }: { params: { id: string } }) {
+  const [building, setBuilding] = React.useState(null)
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
 
   React.useEffect(() => {
-    async function fetchDevice() {
+    async function fetchBuilding() {
       try {
-        const response = await fetch(`/api/network-devices/${params.id}`)
+        const response = await fetch(`/api/buildings/${params.id}`)
         if (!response.ok) {
-          throw new Error('Failed to fetch network device data')
+          throw new Error('Failed to fetch building data')
         }
         const data = await response.json()
-        setDevice(data)
+        setBuilding(data)
       } catch (err: any) {
         setError(err.message)
         toast({
           title: 'Error',
-          description: 'Could not fetch network device data.',
+          description: 'Could not fetch building data.',
           variant: 'destructive',
         })
       } finally {
@@ -38,7 +38,7 @@ export default function EditNetworkDevicePage({ params }: { params: { id: string
       }
     }
 
-    fetchDevice()
+    fetchBuilding()
   }, [params.id])
 
   return (
@@ -50,11 +50,11 @@ export default function EditNetworkDevicePage({ params }: { params: { id: string
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href='/dashboard/operations'>Operations</BreadcrumbLink>
+            <BreadcrumbLink href='/dashboard/crm'>CRM</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href='/dashboard/operations/network-devices'>Network Devices</BreadcrumbLink>
+            <BreadcrumbLink href='/dashboard/crm/buildings'>Buildings</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -63,12 +63,12 @@ export default function EditNetworkDevicePage({ params }: { params: { id: string
         </BreadcrumbList>
       </Breadcrumb>
       <div className='my-4'>
-        <h1 className='text-2xl font-bold'>Edit network device</h1>
-        <p className='text-muted-foreground'>Update the device details.</p>
+        <h1 className='text-2xl font-bold'>Edit building</h1>
+        <p className='text-muted-foreground'>Update the building details.</p>
       </div>
       {loading && <p>Loading...</p>}
       {error && <p className='text-destructive'>{error}</p>}
-      {!loading && !error && device && <NetworkDeviceForm device={device} />}
+      {!loading && !error && building && <BuildingForm building={building} />}
     </div>
   )
 }

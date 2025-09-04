@@ -37,13 +37,28 @@ const Leads: CollectionConfig = {
               nextDueDate: new Date().toISOString(), // Set to today for now
               accountBalance: 0,
               internalNotes: doc.notes,
-              serviceAddress: doc.location,
+              buildingUnit: doc.buildingUnit, // Pass building unit
               ispOwner: doc.ispOwner, // Assign ispOwner from the Lead
               // connectionType and assignedIp will be managed by Ops
             },
           });
 
           req.payload.logger.info(`New Subscriber created from Lead: ${newSubscriber.id}`);
+
+          // 3. Update the BuildingUnit
+          if (doc.buildingUnit) {
+            const buildingUnitId = typeof doc.buildingUnit === 'object' ? doc.buildingUnit.id : doc.buildingUnit;
+            await req.payload.update({
+              collection: 'building-units',
+              id: buildingUnitId,
+              data: {
+                status: 'active-subscriber',
+                subscriber: newSubscriber.id,
+                lead: null,
+              },
+            });
+            req.payload.logger.info(`BuildingUnit ${buildingUnitId} updated to Active Subscriber.`);
+          }
 
           // 2. If the lead was from a partner, increment referralCount
           if (doc.leadSource === 'partner-referral' && doc.referredBy) {
@@ -143,10 +158,10 @@ const Leads: CollectionConfig = {
         type: 'textarea',
     },
     {
-        name: 'location',
+        name: 'buildingUnit',
         type: 'relationship',
-        relationTo: 'service-locations',
-        required: true,
+        relationTo: 'building-units',
+        hasMany: false,
     },
   ],
 };

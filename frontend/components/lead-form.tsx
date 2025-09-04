@@ -18,7 +18,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { ServiceLocationSelector } from './service-location-selector'
+import { UnitSelector } from './unit-selector'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from './ui/textarea'
 
@@ -31,7 +31,9 @@ const leadFormSchema = z.object({
   preferredPlan: z.string().optional(),
   preferredBillingCycle: z.string().optional(),
   notes: z.string().optional(),
-  location: z.string().min(1, 'Location is required'),
+  serviceLocation: z.string().optional(),
+  building: z.string().optional(),
+  buildingUnit: z.string().optional(),
 })
 
 type LeadFormValues = z.infer<typeof leadFormSchema>
@@ -80,7 +82,7 @@ export function LeadForm({ lead }: { lead?: any }) {
       preferredPlan: lead?.preferredPlan?.id || '',
       preferredBillingCycle: lead?.preferredBillingCycle || 'monthly',
       notes: lead?.notes || '',
-      location: lead?.location?.id || '',
+      buildingUnit: lead?.buildingUnit?.id || '',
     },
   })
 
@@ -157,22 +159,7 @@ export function LeadForm({ lead }: { lead?: any }) {
                 )}
                 />
             </div>
-            <FormField
-              control={form.control}
-              name='location'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Service Location</FormLabel>
-                  <FormControl>
-                    <ServiceLocationSelector
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <UnitSelector />
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                 <FormField
                     control={form.control}

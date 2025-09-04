@@ -60,6 +60,32 @@ const Subscribers: CollectionConfig = {
           payload.logger.info(`Upfront charges invoice created for new trial subscriber ${subscriberId}.`);
         }
       },
+      async ({ doc, previousDoc, req }) => {
+        // If status changed to 'Disconnected'
+        if (doc.status === 'disconnected' && previousDoc.status !== 'disconnected' && doc.buildingUnit) {
+            const { payload } = req;
+            const buildingUnitId = typeof doc.buildingUnit === 'object' ? doc.buildingUnit.id : doc.buildingUnit;
+    
+            // Find the building unit
+            const buildingUnit = await payload.findByID({
+                collection: 'building-units',
+                id: buildingUnitId,
+            });
+    
+            if (buildingUnit) {
+                // Update the building unit
+                await payload.update({
+                    collection: 'building-units',
+                    id: buildingUnitId,
+                    data: {
+                        status: 'former-subscriber',
+                        subscriber: null,
+                    },
+                });
+                payload.logger.info(`Building unit ${buildingUnitId} status updated to 'former-subscriber' and subscriber link cleared.`);
+            }
+        }
+      }
     ],
     afterDelete: [getAuditLogDeleteHook('subscribers')],
   },
@@ -184,10 +210,10 @@ const Subscribers: CollectionConfig = {
       type: 'textarea',
     },
     {
-      name: 'serviceAddress',
-      type: 'relationship',
-      relationTo: 'service-locations',
-      required: true,
+        name: 'buildingUnit',
+        type: 'relationship',
+        relationTo: 'building-units',
+        hasMany: false,
     },
     {
       name: 'connectionType',

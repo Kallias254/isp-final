@@ -18,7 +18,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { ServiceLocationSelector } from './service-location-selector'
+import { UnitSelector } from './unit-selector'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const subscriberFormSchema = z.object({
@@ -28,8 +28,10 @@ const subscriberFormSchema = z.object({
   mpesaNumber: z.string().min(10, 'M-Pesa number is required'),
   servicePlan: z.string().min(1, 'Service plan is required'),
   billingCycle: z.string().min(1, 'Billing cycle is required'),
-  serviceAddress: z.string().min(1, 'Service address is required'),
   status: z.string().min(1, 'Status is required'),
+  serviceLocation: z.string().optional(),
+  building: z.string().optional(),
+  buildingUnit: z.string().optional(),
 })
 
 type SubscriberFormValues = z.infer<typeof subscriberFormSchema>
@@ -73,7 +75,7 @@ export function SubscriberForm({ subscriber }: { subscriber?: any }) {
       mpesaNumber: subscriber?.mpesaNumber || '',
       servicePlan: subscriber?.servicePlan?.id || '',
       billingCycle: subscriber?.billingCycle || '',
-      serviceAddress: subscriber?.serviceAddress?.id || '',
+      buildingUnit: subscriber?.buildingUnit?.id || '',
       status: subscriber?.status || 'pending-installation',
     },
     values: { // To update accountNumber when it's generated
@@ -83,7 +85,7 @@ export function SubscriberForm({ subscriber }: { subscriber?: any }) {
         mpesaNumber: subscriber?.mpesaNumber || '',
         servicePlan: subscriber?.servicePlan?.id || '',
         billingCycle: subscriber?.billingCycle || '',
-        serviceAddress: subscriber?.serviceAddress?.id || '',
+        buildingUnit: subscriber?.buildingUnit?.id || '',
         status: subscriber?.status || 'pending-installation',
     }
   })
@@ -185,22 +187,7 @@ export function SubscriberForm({ subscriber }: { subscriber?: any }) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name='serviceAddress'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Service Address</FormLabel>
-                  <FormControl>
-                    <ServiceLocationSelector
-                      value={field.value}
-                      onChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <UnitSelector />
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
               <FormField
                 control={form.control}

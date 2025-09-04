@@ -11,18 +11,28 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { buildings } from "@/app/dashboard/crm/buildings/mock-data";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import useSWR from "swr";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UnitsDataTable } from "./units-data-table";
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function BuildingDetailPage({ params }: { params: { id: string } }) {
-  const building = buildings.find(b => b.id === params.id);
+  const { data: building, error } = useSWR<Building>(
+    `/api/buildings/${params.id}`,
+    fetcher
+  );
+
+  if (error) return <div>Failed to load building</div>;
+  if (!building) return <div>Loading...</div>;
 
   if (!building) {
     notFound();
   }
 
-  const location = building.location as ServiceLocation;
+  const location = building.serviceLocation as ServiceLocation;
 
   return (
     <div className="container mx-auto py-10">
@@ -52,24 +62,35 @@ export default function BuildingDetailPage({ params }: { params: { id: string } 
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{building.status}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Location</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg font-semibold">{location?.name || 'N/A'}</p>
-          </CardContent>
-        </Card>
-      </div>
+      <Tabs defaultValue="details">
+        <TabsList>
+          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="units">Units</TabsTrigger>
+        </TabsList>
+        <TabsContent value="details">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Status</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-bold">{building.status}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Location</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-lg font-semibold">{location?.name || 'N/A'}</p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        <TabsContent value="units">
+          <UnitsDataTable buildingId={params.id} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

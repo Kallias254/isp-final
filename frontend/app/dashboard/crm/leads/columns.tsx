@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { ColumnDef } from "@tanstack/react-table"
 import { Lead } from "@/payload-types"
@@ -20,11 +20,11 @@ const getStatusColor = (status: string) => {
     case "new":
       return "bg-blue-500 hover:bg-blue-600"
     case "contacted":
-      return "bg-cyan-500 hover:bg-cyan-600"
-    case "site-survey":
-      return "bg-purple-500 hover:bg-purple-600"
-    case "converted":
+      return "bg-yellow-500 hover:bg-yellow-600"
+    case "qualified":
       return "bg-green-500 hover:bg-green-600"
+    case "converted":
+      return "bg-purple-500 hover:bg-purple-600"
     case "lost":
       return "bg-red-500 hover:bg-red-600"
     default:
@@ -35,7 +35,7 @@ const getStatusColor = (status: string) => {
 export const columns: ColumnDef<Lead>[] = [
   {
     accessorKey: "subscriberName",
-    header: "Subscriber Name",
+    header: "Name",
     cell: ({ row }) => {
       const { id, subscriberName } = row.original
       return (
@@ -47,7 +47,7 @@ export const columns: ColumnDef<Lead>[] = [
   },
   {
     accessorKey: "subscriberPhone",
-    header: "Subscriber Phone",
+    header: "Phone",
   },
   {
     accessorKey: "status",
@@ -59,21 +59,7 @@ export const columns: ColumnDef<Lead>[] = [
   },
   {
     accessorKey: "leadSource",
-    header: "Lead Source",
-  },
-  {
-    accessorKey: "serviceLocation",
-    header: "Service Location",
-    cell: ({ row }) => {
-      const location = row.original.serviceLocation
-      if (typeof location === 'object' && location !== null) {
-        if (typeof location.building === 'object' && location.building !== null) {
-            return `${location.building.name} - ${location.unitNumber}`
-        }
-        return location.unitNumber
-      }
-      return location
-    },
+    header: "Source",
   },
   {
     id: "actions",
@@ -96,8 +82,12 @@ export const columns: ColumnDef<Lead>[] = [
               Copy lead ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>View lead</DropdownMenuItem>
-            <DropdownMenuItem>Convert to subscriber</DropdownMenuItem>
+            <Link href={`/dashboard/crm/leads/${lead.id}`}>
+              <DropdownMenuItem>View</DropdownMenuItem>
+            </Link>
+            <Link href={`/dashboard/crm/leads/${lead.id}/edit`}>
+              <DropdownMenuItem>Edit</DropdownMenuItem>
+            </Link>
           </DropdownMenuContent>
         </DropdownMenu>
       )

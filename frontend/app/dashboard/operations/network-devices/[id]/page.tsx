@@ -1,4 +1,5 @@
-import { cookies } from "next/headers";
+'use client'
+
 import { notFound } from "next/navigation";
 import { NetworkDevice, ServiceLocation } from "@/payload-types";
 import {
@@ -10,30 +11,10 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { resources } from "../mock-data";
 
-async function getDevice(id: string, token: string | undefined): Promise<NetworkDevice | null> {
-  if (!token) {
-    return null;
-  }
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_PAYLOAD_API_URL}/api/network-devices/${id}?depth=1`,
-    {
-      headers: {
-        Authorization: `JWT ${token}`,
-      },
-    }
-  );
-  if (!res.ok) {
-    return null;
-  }
-  const data = await res.json();
-  return data;
-}
-
-export default async function NetworkDeviceDetailPage({ params }: { params: { id: string } }) {
-  const nextCookies = cookies();
-  const token = nextCookies.get("payload-token")?.value;
-  const device = await getDevice(params.id, token);
+export default function NetworkDeviceDetailPage({ params }: { params: { id: string } }) {
+  const device = resources.find(d => d.id === params.id);
 
   if (!device) {
     notFound();

@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { ColumnDef } from "@tanstack/react-table"
 import { Building } from "@/payload-types"
@@ -16,18 +16,18 @@ import {
 import { Badge } from "@/components/ui/badge"
 
 const getStatusColor = (status: string) => {
-    switch (status) {
-        case "prospecting":
-        return "bg-blue-500 hover:bg-blue-600"
-        case "negotiating":
-        return "bg-yellow-500 hover:bg-yellow-600"
-        case "active":
-        return "bg-green-500 hover:bg-green-600"
-        case "lost":
-        return "bg-red-500 hover:bg-red-600"
-        default:
-        return "bg-gray-500"
-    }
+  switch (status) {
+    case "active":
+      return "bg-green-500 hover:bg-green-600"
+    case "prospecting":
+      return "bg-yellow-500 hover:bg-yellow-600"
+    case "negotiating":
+      return "bg-blue-500 hover:bg-blue-600"
+    case "on_hold":
+      return "bg-orange-500 hover:bg-orange-600"
+    default:
+      return "bg-gray-500"
+  }
 }
 
 export const columns: ColumnDef<Building>[] = [
@@ -44,10 +44,6 @@ export const columns: ColumnDef<Building>[] = [
     },
   },
   {
-    accessorKey: "address",
-    header: "Address",
-  },
-  {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
@@ -56,15 +52,15 @@ export const columns: ColumnDef<Building>[] = [
     },
   },
   {
-    accessorKey: "partner",
-    header: "Partner",
+    accessorKey: "location",
+    header: "Location",
     cell: ({ row }) => {
-      const partner = row.original.partner
-      if (typeof partner === 'object' && partner !== null) {
-        return partner.fullName
-      }
-      return partner
-    },
+        const location = row.original.location
+        if (typeof location === 'object' && location !== null) {
+            return location.name
+        }
+        return location
+    }
   },
   {
     id: "actions",
@@ -87,8 +83,12 @@ export const columns: ColumnDef<Building>[] = [
               Copy building ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>View building</DropdownMenuItem>
-            <DropdownMenuItem>Edit building</DropdownMenuItem>
+            <Link href={`/dashboard/crm/buildings/${building.id}`}>
+              <DropdownMenuItem>View</DropdownMenuItem>
+            </Link>
+            <Link href={`/dashboard/crm/buildings/${building.id}/edit`}>
+              <DropdownMenuItem>Edit</DropdownMenuItem>
+            </Link>
           </DropdownMenuContent>
         </DropdownMenu>
       )

@@ -44,7 +44,7 @@ const Buildings: CollectionConfig = {
         'active',
         'prospecting',
         'negotiating',
-        'on-hold',
+        'on_hold',
       ],
       defaultValue: 'prospecting',
       required: true,

@@ -25,9 +25,9 @@ const CustomToolbar = (table: Table<Resource>) => (
         <div className="flex items-center gap-2">
             <Input
             placeholder="Filter by name..."
-            value={(table.getColumn("resourceName")?.getFilterValue() as string) ?? ""}
+            value={(table.getColumn("deviceName")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
-                table.getColumn("resourceName")?.setFilterValue(event.target.value)
+                table.getColumn("deviceName")?.setFilterValue(event.target.value)
             }
             className="max-w-sm"
             />

@@ -20,13 +20,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { ServiceLocationSelector } from './service-location-selector'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
+import { Textarea } from './ui/textarea'
 
 const leadFormSchema = z.object({
-  subscriberName: z.string().min(1, 'Subscriber name is required'),
+  subscriberName: z.string().min(1, 'Name is required'),
   subscriberPhone: z.string().min(10, 'Phone number is required'),
   status: z.string().min(1, 'Status is required'),
-  leadSource: z.string().min(1, 'Lead source is required'),
+  leadSource: z.string().optional(),
   referredBy: z.string().optional(),
   preferredPlan: z.string().optional(),
   preferredBillingCycle: z.string().optional(),
@@ -38,32 +38,30 @@ type LeadFormValues = z.infer<typeof leadFormSchema>
 
 export function LeadForm({ lead }: { lead?: any }) {
   const router = useRouter()
-  const [partners, setPartners] = React.useState<any[]>([])
   const [plans, setPlans] = React.useState<any[]>([])
-  
-  const leadSource = useForm<LeadFormValues>().watch('leadSource')
+  const [partners, setPartners] = React.useState<any[]>([])
 
   React.useEffect(() => {
     async function fetchData() {
       try {
-        const [partnersRes, plansRes] = await Promise.all([
-          fetch('/api/partners?limit=100'),
+        const [plansResponse, partnersResponse] = await Promise.all([
           fetch('/api/plans?limit=100'),
+          fetch('/api/partners?limit=100'),
         ]);
 
-        if (!partnersRes.ok || !plansRes.ok) {
-          throw new Error('Failed to fetch data')
+        if (!plansResponse.ok || !partnersResponse.ok) {
+          throw new Error('Failed to fetch related data');
         }
 
-        const partnersData = await partnersRes.json()
-        const plansData = await plansRes.json()
-        
-        setPartners(partnersData.docs || [])
-        setPlans(plansData.docs || [])
+        const plansData = await plansResponse.json();
+        const partnersData = await partnersResponse.json();
+
+        setPlans(plansData.docs || []);
+        setPartners(partnersData.docs || []);
       } catch (error) {
         toast({
           title: 'Error',
-          description: 'Could not fetch required data.',
+          description: 'Could not fetch related data for the form.',
           variant: 'destructive',
         })
       }
@@ -86,6 +84,8 @@ export function LeadForm({ lead }: { lead?: any }) {
     },
   })
 
+  const watchLeadSource = form.watch('leadSource');
+
   async function onSubmit(data: LeadFormValues) {
     const method = lead ? 'PATCH' : 'POST'
     const url = lead ? `/api/leads/${lead.id}` : '/api/leads'
@@ -100,6 +100,8 @@ export function LeadForm({ lead }: { lead?: any }) {
       })
 
       if (!response.ok) {
+        const errorData = await response.json()
+        console.error('Submission error:', errorData)
         throw new Error(`Failed to ${lead ? 'update' : 'create'} lead`)
       }
 
@@ -110,10 +112,10 @@ export function LeadForm({ lead }: { lead?: any }) {
 
       router.push('/dashboard/crm/leads')
       router.refresh()
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: `Could not ${lead ? 'update' : 'create'} the lead.`,
+        description: error.message || `Could not ${lead ? 'update' : 'create'} the lead.`,
         variant: 'destructive',
       })
     }
@@ -127,32 +129,34 @@ export function LeadForm({ lead }: { lead?: any }) {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
-            <FormField
-              control={form.control}
-              name='subscriberName'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Subscriber Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder='Enter subscriber name' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='subscriberPhone'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Subscriber Phone</FormLabel>
-                  <FormControl>
-                    <Input placeholder='Enter phone number' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                <FormField
+                control={form.control}
+                name='subscriberName'
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                        <Input placeholder='Enter full name' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name='subscriberPhone'
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                        <Input placeholder='e.g., 254712345678' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </div>
             <FormField
               control={form.control}
               name='location'
@@ -170,131 +174,135 @@ export function LeadForm({ lead }: { lead?: any }) {
               )}
             />
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-              <FormField
-                control={form.control}
-                name='leadSource'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Lead Source</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select a source' />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value='partner-referral'>Partner Referral</SelectItem>
-                        <SelectItem value='direct'>Direct</SelectItem>
-                        <SelectItem value='marketing-campaign'>Marketing Campaign</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {leadSource === 'partner-referral' && (
                 <FormField
-                  control={form.control}
-                  name='referredBy'
-                  render={({ field }) => (
+                    control={form.control}
+                    name='status'
+                    render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Referred By</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder='Select a partner' />
-                          </SelectTrigger>
+                            <SelectTrigger>
+                            <SelectValue placeholder='Select status' />
+                            </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {partners.map(partner => (
-                            <SelectItem key={partner.id} value={partner.id}>{partner.name}</SelectItem>
-                          ))}
+                            <SelectItem value='new'>New</SelectItem>
+                            <SelectItem value='contacted'>Contacted</SelectItem>
+                            <SelectItem value='qualified'>Qualified</SelectItem>
+                            <SelectItem value='converted'>Converted</SelectItem>
+                            <SelectItem value='lost'>Lost</SelectItem>
                         </SelectContent>
-                      </Select>
-                      <FormMessage />
+                        </Select>
+                        <FormMessage />
                     </FormItem>
-                  )}
+                    )}
                 />
-              )}
+                <FormField
+                    control={form.control}
+                    name='leadSource'
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Lead Source</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder='Select source' />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value='partner-referral'>Partner Referral</SelectItem>
+                            <SelectItem value='direct'>Direct</SelectItem>
+                            <SelectItem value='marketing-campaign'>Marketing Campaign</SelectItem>
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
             </div>
+            {watchLeadSource === 'partner-referral' && (
+                 <FormField
+                    control={form.control}
+                    name='referredBy'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Referred By</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder='Select a partner' />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {partners.map(partner => (
+                              <SelectItem key={partner.id} value={partner.id}>{partner.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+            )}
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-               <FormField
-                control={form.control}
-                name='preferredPlan'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Preferred Plan</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select a plan' />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {plans.map(plan => (
-                          <SelectItem key={plan.id} value={plan.id}>{plan.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <FormField
-                control={form.control}
-                name='preferredBillingCycle'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Preferred Billing Cycle</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select a cycle' />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value='monthly'>Monthly</SelectItem>
-                        <SelectItem value='quarterly'>Quarterly</SelectItem>
-                        <SelectItem value='annually'>Annually</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                    control={form.control}
+                    name='preferredPlan'
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Preferred Plan</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder='Select a plan' />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            {plans.map(plan => (
+                            <SelectItem key={plan.id} value={plan.id}>{plan.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name='preferredBillingCycle'
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Preferred Billing Cycle</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder='Select a cycle' />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value='monthly'>Monthly</SelectItem>
+                            <SelectItem value='quarterly'>Quarterly</SelectItem>
+                            <SelectItem value='annually'>Annually</SelectItem>
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
             </div>
-             <FormField
-                control={form.control}
-                name='status'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select status' />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value='new'>New</SelectItem>
-                        <SelectItem value='contacted'>Contacted</SelectItem>
-                        <SelectItem value='qualified'>Qualified</SelectItem>
-                        <SelectItem value='converted'>Converted</SelectItem>
-                        <SelectItem value='lost'>Lost</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             <FormField
               control={form.control}
               name='notes'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <FormLabel>Internal Notes</FormLabel>
                   <FormControl>
-                    <Textarea placeholder='Add any relevant notes...' {...field} />
+                    <Textarea
+                      placeholder='Add any internal notes here...'
+                      className='resize-none'
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

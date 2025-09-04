@@ -14,21 +14,21 @@ import {
 
 export type Resource = {
   id: string
-  resourceName: string
-  resourceType: string
+  deviceName: string
+  deviceType: string
   status: "active" | "inactive" | "maintenance"
-  location: string
+  physicalLocation: { id: string; name: string; latitude: number; longitude: number; ispOwner: string; createdAt: string; updatedAt: string; }
 }
 
 export const columns: ColumnDef<Resource>[] = [
   {
-    accessorKey: "resourceName",
+    accessorKey: "deviceName",
     header: "Resource Name",
     cell: ({ row }) => {
       const resource = row.original;
       return (
         <Link href={`/dashboard/operations/network-devices/${resource.id}`}>
-          {resource.resourceName}
+          {resource.deviceName}
         </Link>
       );
     },
@@ -42,7 +42,7 @@ export const columns: ColumnDef<Resource>[] = [
     header: "Status",
   },
   {
-    accessorKey: "location",
+    accessorKey: "physicalLocation.name",
     header: "Location",
   },
   {
@@ -67,7 +67,6 @@ export const columns: ColumnDef<Resource>[] = [
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>View Resource</DropdownMenuItem>
-            <DropdownMenuItem>View details</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )

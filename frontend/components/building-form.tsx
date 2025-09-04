@@ -18,10 +18,12 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { ServiceLocationSelector } from './service-location-selector'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const buildingFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   location: z.string().min(1, 'Location is required'),
+  status: z.string().min(1, 'Status is required'),
 })
 
 type BuildingFormValues = z.infer<typeof buildingFormSchema>
@@ -33,6 +35,7 @@ export function BuildingForm({ building }: { building?: any }) {
     defaultValues: {
       name: building?.name || '',
       location: building?.location?.id || '',
+      status: building?.status || 'prospecting',
     },
   })
 
@@ -105,6 +108,29 @@ export function BuildingForm({ building }: { building?: any }) {
                   <FormMessage />
                 </FormItem>
               )}
+            />
+            <FormField
+                control={form.control}
+                name='status'
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder='Select status' />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                        <SelectItem value='prospecting'>Prospecting</SelectItem>
+                        <SelectItem value='active'>Active</SelectItem>
+                        <SelectItem value='negotiating'>Negotiating</SelectItem>
+                        <SelectItem value='on_hold'>On Hold</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    </FormItem>
+                )}
             />
             <div className='flex justify-end gap-2'>
               <Button type='button' variant='outline' onClick={() => router.back()}>

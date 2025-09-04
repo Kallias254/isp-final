@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from 'sonner'
 import { ServiceLocationSelector } from './service-location-selector'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from './ui/textarea'
@@ -25,7 +25,7 @@ import { Textarea } from './ui/textarea'
 const networkDeviceFormSchema = z.object({
   deviceName: z.string().min(1, 'Device name is required'),
   deviceType: z.string().min(1, 'Device type is required'),
-  ipAddress: z.string().ip().optional().or(z.literal('')),
+  ipAddress: z.string().optional().or(z.literal('')),
   macAddress: z.string().optional(),
   purchaseDate: z.string().optional(),
   purchaseCost: z.coerce.number().optional(),

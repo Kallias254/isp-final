@@ -11,7 +11,9 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { buildings } from "../mock-data";
+import { buildings } from "@/app/dashboard/crm/buildings/mock-data";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function BuildingDetailPage({ params }: { params: { id: string } }) {
   const building = buildings.find(b => b.id === params.id);
@@ -43,36 +45,31 @@ export default function BuildingDetailPage({ params }: { params: { id: string } 
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="my-4">
+      <div className="my-4 flex justify-between items-center">
         <h1 className="text-2xl font-bold">{building.name}</h1>
+        <Link href={`/dashboard/crm/buildings/${building.id}/edit`}>
+          <Button>Edit Building</Button>
+        </Link>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Building Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="font-semibold">Status:</p>
-              <p>{building.status}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Address:</p>
-              <p>{building.address}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Location:</p>
-              <p>{location?.name || 'N/A'}</p>
-            </div>
-            {building.partner && (
-              <div>
-                <p className="font-semibold">Partner:</p>
-                <p>{typeof building.partner === 'object' ? building.partner.fullName : building.partner}</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{building.status}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Location</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-lg font-semibold">{location?.name || 'N/A'}</p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

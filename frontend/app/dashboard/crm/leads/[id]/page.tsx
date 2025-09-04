@@ -1,7 +1,7 @@
 'use client'
 
 import { notFound } from "next/navigation";
-import { Lead, BuildingUnit, Building, Plan, ServiceLocation } from "@/payload-types";
+import { Lead, ServiceLocation, Plan } from "@/payload-types";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { leads } from "../mock-data";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function LeadDetailPage({ params }: { params: { id: string } }) {
   const lead = leads.find(l => l.id === params.id);
@@ -20,8 +22,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
     notFound();
   }
 
-  const serviceLocation = lead.serviceLocation as BuildingUnit;
-  const building = serviceLocation?.building as Building;
+  const location = lead.location as ServiceLocation;
   const preferredPlan = lead.preferredPlan as Plan;
 
   return (
@@ -45,49 +46,47 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="my-4">
+      <div className="my-4 flex justify-between items-center">
         <h1 className="text-2xl font-bold">{lead.subscriberName}</h1>
+        <Link href={`/dashboard/crm/leads/${lead.id}/edit`}>
+          <Button>Edit Lead</Button>
+        </Link>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Lead Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="font-semibold">Status:</p>
-              <p>{lead.status}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Lead Source:</p>
-              <p>{lead.leadSource}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Phone:</p>
-              <p>{lead.subscriberPhone}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Building:</p>
-              <p>{building?.name || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Unit:</p>
-              <p>{serviceLocation?.unitNumber || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Preferred Plan:</p>
-              <p>{preferredPlan?.name || 'N/A'}</p>
-            </div>
-            {/* The location field in mock data is not a ServiceLocation type, so we can't access latitude/longitude directly */}
-            {/* {building?.location && (
-              <div>
-                <p className="font-semibold">Coordinates:</p>
-                <p>{(building.location as ServiceLocation).latitude}, {(building.location as ServiceLocation).longitude}</p>
-              </div>
-            )} */}
-          </div>
-        </CardContent>
-      </Card>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{lead.status}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Lead Source</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-lg font-semibold">{lead.leadSource}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Preferred Plan</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{preferredPlan?.name || 'N/A'}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Location</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{location?.name || 'N/A'}</p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

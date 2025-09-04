@@ -197,6 +197,7 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
+    enableRowSelection: true,
   })
 
   function handleDragEnd(event: DragEndEvent) {
@@ -306,7 +307,7 @@ export function DataTable<TData, TValue>({
         </div>
         <div className="flex items-center justify-between px-4">
           <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
+            {table.getFilteredSelectedRowModel()?.rows?.length || 0} of{" "}
             {table.getFilteredRowModel().rows.length} row(s) selected.
           </div>
           <div className="flex w-fit items-center gap-8 lg:w-fit">

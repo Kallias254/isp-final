@@ -1,21 +1,12 @@
 'use client'
 
-import useSWR from 'swr'
+import * as React from 'react'
 import { DataTable } from '@/components/data-table'
 import { columns } from './units-columns'
 import { BuildingUnit } from '@/payload-types'
 
-const fetcher = (url: string) => fetch(url).then(res => res.json())
+export function UnitsDataTable({ data }: { data: BuildingUnit[] }) {
+  const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({})
 
-interface PayloadResponse<T> {
-    docs: T[];
-}
-
-export function UnitsDataTable({ buildingId }: { buildingId: string }) {
-  const { data, error } = useSWR<PayloadResponse<BuildingUnit>>(`/api/building-units?where[building][equals]=${buildingId}&limit=100`, fetcher)
-
-  if (error) return <div>Failed to load units</div>
-  if (!data) return <div>Loading...</div>
-
-  return <DataTable columns={columns} data={data.docs} />
+  return <DataTable columns={columns} data={data} rowSelection={rowSelection} setRowSelection={setRowSelection} />
 }

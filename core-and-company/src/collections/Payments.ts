@@ -1,6 +1,6 @@
 import { CollectionConfig } from 'payload/types';
 import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
-import { sendNotification } from '../utils/notificationService'; // Import sendNotification
+// import { sendNotification } from '../utils/notificationService'; // Import sendNotification
 import { isAdminOrHasPermission } from '../utils/access';
 import { setIspOwnerHook } from '../hooks/setIspOwner';
 
@@ -23,7 +23,7 @@ const Payments: CollectionConfig = {
         // Check if a new payment was created
         if (operation === 'create') {
           const payload = req.payload;
-          const paymentAmount = doc.amountPaid;
+          // const paymentAmount = doc.amountPaid;
           const invoiceId = typeof doc.invoice === 'object' ? doc.invoice.id : doc.invoice;
 
           // Fetch the invoice to get the subscriber ID
@@ -53,26 +53,26 @@ const Payments: CollectionConfig = {
           }
 
           // Send payment received notification
-          if (subscriber.deviceToken) {
-            await sendNotification({
-              payload: payload,
-              recipient: subscriber.id,
-              type: 'push',
-              deviceToken: subscriber.deviceToken,
-              title: 'Payment Received!',
-              content: `Your payment of KES ${paymentAmount} for invoice ${invoice.invoiceNumber} has been successfully received. Thank you!`,
-              triggerEvent: 'payment.received',
-              data: {
-                paymentId: doc.id,
-                invoiceId: invoice.id,
-                subscriberId: subscriber.id,
-              },
-              ispOwner: typeof subscriber.ispOwner === 'object' ? subscriber.ispOwner.id : subscriber.ispOwner, // Assign ispOwner from the Subscriber
-            });
-            payload.logger.info(`Push notification sent for payment ${doc.id} (event: payment.received)`);
-          } else {
-            payload.logger.warn(`No deviceToken found for subscriber ${subscriber.id}. Skipping payment received push notification.`);
-          }
+          // if (subscriber.deviceToken) {
+          //   await sendNotification({
+          //     payload: payload,
+          //     recipient: subscriber.id,
+          //     type: 'push',
+          //     deviceToken: subscriber.deviceToken,
+          //     title: 'Payment Received!',
+          //     content: `Your payment of KES ${paymentAmount} for invoice ${invoice.invoiceNumber} has been successfully received. Thank you!`,
+          //     triggerEvent: 'payment.received',
+          //     data: {
+          //       paymentId: doc.id,
+          //       invoiceId: invoice.id,
+          //       subscriberId: subscriber.id,
+          //     },
+          //     ispOwner: typeof subscriber.ispOwner === 'object' ? subscriber.ispOwner.id : subscriber.ispOwner, // Assign ispOwner from the Subscriber
+          //   });
+          //   payload.logger.info(`Push notification sent for payment ${doc.id} (event: payment.received)`);
+          // } else {
+          //   payload.logger.warn(`No deviceToken found for subscriber ${subscriber.id}. Skipping payment received push notification.`);
+          // }
 
 
           // Check if subscriber is suspended
@@ -106,24 +106,24 @@ const Payments: CollectionConfig = {
             payload.logger.info(`Subscriber ${subscriber.id} status changed to Active (reconnected).`);
 
             // Send reconnection notification
-            if (subscriber.deviceToken) {
-              await sendNotification({
-                payload: payload,
-                recipient: subscriber.id,
-                type: 'push',
-                deviceToken: subscriber.deviceToken,
-                title: 'Service Reconnected!',
-                content: `Your service has been reconnected. Welcome back!`,
-                triggerEvent: 'subscriber.reconnected',
-                data: {
-                  subscriberId: subscriber.id,
-                },
-                ispOwner: typeof subscriber.ispOwner === 'object' ? subscriber.ispOwner.id : subscriber.ispOwner, // Assign ispOwner from the Subscriber
-              });
-              payload.logger.info(`Push notification sent for subscriber ${subscriber.id} (event: subscriber.reconnected)`);
-            } else {
-              payload.logger.warn(`No deviceToken found for subscriber ${subscriber.id}. Skipping reconnection push notification.`);
-            }
+            // if (subscriber.deviceToken) {
+            //   await sendNotification({
+            //     payload: payload,
+            //     recipient: subscriber.id,
+            //     type: 'push',
+            //     deviceToken: subscriber.deviceToken,
+            //     title: 'Service Reconnected!',
+            //     content: `Your service has been reconnected. Welcome back!`,
+            //     triggerEvent: 'subscriber.reconnected',
+            //     data: {
+            //       subscriberId: subscriber.id,
+            //     },
+            //     ispOwner: typeof subscriber.ispOwner === 'object' ? subscriber.ispOwner.id : subscriber.ispOwner, // Assign ispOwner from the Subscriber
+            //   });
+            //   payload.logger.info(`Push notification sent for subscriber ${subscriber.id} (event: subscriber.reconnected)`);
+            // } else {
+            //   payload.logger.warn(`No deviceToken found for subscriber ${subscriber.id}. Skipping reconnection push notification.`);
+            // }
           }
         }
         return doc;

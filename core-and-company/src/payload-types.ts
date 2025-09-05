@@ -8,29 +8,30 @@
 export interface Config {
   collections: {
     'audit-logs': AuditLog;
-    staff: Staff;
-    roles: Role;
-    companies: Company;
-    plans: Plan;
-    partners: Partner;
-    invoices: Invoice;
-    payments: Payment;
-    expenses: Expense;
-    media: Media;
     buildings: Building;
-    buildingUnits: BuildingUnit;
-    leads: Lead;
-    subscribers: Subscriber;
-    'network-devices': NetworkDevice;
-    ipSubnets: IpSubnet;
-    ipAddresses: IpAddress;
-    'work-orders': WorkOrder;
-    'crisis-events': CrisisEvent;
-    'service-locations': ServiceLocation;
-    tickets: Ticket;
-    messages: Message;
+    'building-units': BuildingUnit;
     contacts: Contact;
+    'crisis-events': CrisisEvent;
+    expenses: Expense;
+    invoices: Invoice;
+    ipAddresses: IpAddress;
+    ipSubnets: IpSubnet;
+    leads: Lead;
+    media: Media;
+    messages: Message;
     messageTemplates: MessageTemplate;
+    'network-devices': NetworkDevice;
+    partners: Partner;
+    payments: Payment;
+    plans: Plan;
+    'service-locations': ServiceLocation;
+    staff: Staff;
+    subscribers: Subscriber;
+    'subscriber-technical-details': SubscriberTechnicalDetail;
+    tickets: Ticket;
+    'work-orders': WorkOrder;
+    companies: Company;
+    roles: Role;
   };
   globals: {};
 }
@@ -94,9 +95,10 @@ export interface Role {
       | 'expenses'
       | 'media'
       | 'buildings'
-      | 'buildingUnits'
+      | 'building-units'
       | 'leads'
       | 'subscribers'
+      | 'subscriber-technical-details'
       | 'network-devices'
       | 'ipSubnets'
       | 'ipAddresses'
@@ -122,56 +124,12 @@ export interface Company {
   updatedAt: string;
   createdAt: string;
 }
-export interface Plan {
-  id: string;
-  name: string;
-  downloadSpeed: number;
-  uploadSpeed: number;
-  price: number;
-  billingCycle: 'monthly' | 'quarterly';
-  notes?: string;
-  planEnabled?: boolean;
-  activeForNewSignups?: boolean;
-  ipAssignmentType: 'dynamic' | 'static-public';
-  staticIpPool?: string | IpSubnet;
-  ispOwner: string | Company;
-  updatedAt: string;
-  createdAt: string;
-}
-export interface IpSubnet {
-  id: string;
-  network: string;
-  description: string;
-  ispOwner: string | Company;
-  updatedAt: string;
-  createdAt: string;
-}
-export interface Partner {
-  id: string;
-  fullName: string;
-  phoneNumber: string;
-  mpesaNumber: string;
-  status: 'prospect' | 'active' | 'inactive';
-  buildings?: string[] | Building[];
-  commissionRate?: number;
-  referralCount?: number;
-  perks?: boolean;
-  ispOwner: string | Company;
-  updatedAt: string;
-  createdAt: string;
-}
 export interface Building {
   id: string;
   name: string;
   buildingImage?: string | Media;
-  address: string;
-  status: 'prospecting' | 'negotiating' | 'active' | 'lost';
-  partner?: string | Partner;
-  /**
-   * @minItems 2
-   * @maxItems 2
-   */
-  location?: [number, number];
+  location: string | ServiceLocation;
+  status: 'active' | 'prospecting' | 'negotiating' | 'on_hold';
   equipment?: string[] | NetworkDevice[];
   ispOwner: string | Company;
   updatedAt: string;
@@ -189,6 +147,15 @@ export interface Media {
   filesize?: number;
   width?: number;
   height?: number;
+}
+export interface ServiceLocation {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  ispOwner: string | Company;
+  updatedAt: string;
+  createdAt: string;
 }
 export interface NetworkDevice {
   id: string;
@@ -215,27 +182,25 @@ export interface IpAddress {
   updatedAt: string;
   createdAt: string;
 }
-export interface ServiceLocation {
+export interface IpSubnet {
   id: string;
-  name: string;
+  network: string;
+  description: string;
   ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
-export interface Invoice {
+export interface BuildingUnit {
   id: string;
+  unitNumber: string;
+  building: string | Building;
+  status: 'vacant-unsurveyed' | 'lead' | 'active-subscriber' | 'former-subscriber' | 'do-not-solicit';
+  subscriber?: string | Subscriber;
+  lead?: string | Lead;
+  currentProvider?: string;
+  competitorPaymentDate?: string;
+  currentIssues?: string;
   ispOwner: string | Company;
-  invoiceNumber: string;
-  subscriber: string | Subscriber;
-  amountDue: number;
-  dueDate: string;
-  status?: 'unpaid' | 'paid' | 'overdue' | 'waived' | 'partially-paid';
-  lineItems: {
-    description: string;
-    quantity: number;
-    price: number;
-    id?: string;
-  }[];
   updatedAt: string;
   createdAt: string;
 }
@@ -262,7 +227,8 @@ export interface Subscriber {
     price?: number;
     id?: string;
   }[];
-  addressNotes?: string;
+  internalNotes?: string;
+  buildingUnit?: string | BuildingUnit;
   connectionType?: 'fiber' | 'wireless';
   assignedIp?: string;
   cpeDevice?: string | NetworkDevice;
@@ -272,14 +238,69 @@ export interface Subscriber {
   updatedAt: string;
   createdAt: string;
 }
-export interface Payment {
+export interface Plan {
+  id: string;
+  name: string;
+  downloadSpeed: number;
+  uploadSpeed: number;
+  price: number;
+  ipAssignmentType: 'dynamic-pool' | 'static-pool' | 'static-individual';
+  dynamicIpPool?: string | IpSubnet;
+  staticIpPool?: string | IpSubnet;
+  sessionLimit?: number;
+  notes?: string;
+  planEnabled?: boolean;
+  activeForNewSignups?: boolean;
+  ispOwner: string | Company;
+  updatedAt: string;
+  createdAt: string;
+}
+export interface Lead {
   id: string;
   ispOwner: string | Company;
-  paymentReference: string;
-  invoice: string | Invoice;
-  amountPaid: number;
-  paymentDate: string;
-  paymentMethod: 'mpesa' | 'bank-transfer' | 'cash';
+  subscriberName: string;
+  subscriberPhone: string;
+  status?: 'new' | 'contacted' | 'qualified' | 'converted' | 'lost';
+  leadSource?: 'partner-referral' | 'direct' | 'marketing-campaign';
+  referredBy?: string | Partner;
+  preferredPlan?: string | Plan;
+  notes?: string;
+  buildingUnit?: string | BuildingUnit;
+  updatedAt: string;
+  createdAt: string;
+}
+export interface Partner {
+  id: string;
+  fullName: string;
+  phoneNumber: string;
+  mpesaNumber: string;
+  status: 'prospect' | 'active' | 'inactive';
+  buildings?: string[] | Building[];
+  commissionRate?: number;
+  referralCount?: number;
+  perks?: boolean;
+  ispOwner: string | Company;
+  updatedAt: string;
+  createdAt: string;
+}
+export interface Contact {
+  id: string;
+  phoneNumber: string;
+  fullName?: string;
+  source?: string;
+  ispOwner: string | Company;
+  updatedAt: string;
+  createdAt: string;
+}
+export interface CrisisEvent {
+  id: string;
+  rootCauseDevice?: string | NetworkDevice;
+  affectedSubscribers?: string[] | Subscriber[];
+  status?: 'ongoing' | 'resolved';
+  description?: string;
+  startTime?: string;
+  endTime?: string;
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
@@ -313,42 +334,65 @@ export interface Expense {
   updatedAt: string;
   createdAt: string;
 }
-export interface BuildingUnit {
+export interface Invoice {
   id: string;
-  unitNumber: string;
-  building: string | Building;
-  status: 'vacant' | 'occupied' | 'lead' | 'subscriber';
-  currentProvider?: string;
-  competitorPaymentDate?: string;
-  currentIssues?: string;
+  ispOwner: string | Company;
+  invoiceNumber: string;
+  subscriber: string | Subscriber;
+  amountDue: number;
+  dueDate: string;
+  status?: 'unpaid' | 'paid' | 'overdue' | 'waived' | 'partially-paid';
+  lineItems: {
+    description: string;
+    quantity: number;
+    price: number;
+    id?: string;
+  }[];
+  updatedAt: string;
+  createdAt: string;
+}
+export interface Message {
+  id: string;
+  recipient: string;
+  type: 'sms' | 'email' | 'push';
+  content: string;
+  status: 'sent' | 'failed';
+  triggerEvent?: string;
+  sentBy?: string | Staff;
+  bulkSend?: boolean;
   ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
-export interface Lead {
+export interface MessageTemplate {
   id: string;
+  templateName: string;
+  content: string;
   ispOwner: string | Company;
-  subscriberName: string;
-  subscriberPhone: string;
-  status?: 'new' | 'contacted' | 'qualified' | 'converted' | 'lost';
-  leadSource?: 'partner-referral' | 'direct' | 'marketing-campaign';
-  referredBy?: string | Partner;
-  preferredPlan?: string | Plan;
-  preferredBillingCycle?: 'monthly' | 'quarterly' | 'annually';
-  notes?: string;
-  serviceLocation: string;
   updatedAt: string;
   createdAt: string;
 }
-export interface WorkOrder {
+export interface Payment {
   id: string;
   ispOwner: string | Company;
-  orderType: 'new-installation' | 'repair' | 'upgrade' | 'other';
-  subscriber?: string | Subscriber;
-  status?: 'pending' | 'in-progress' | 'completed' | 'cancelled';
-  assignedTo?: string | Staff;
-  notes?: string;
-  ticket?: string | Ticket;
+  paymentReference: string;
+  invoice: string | Invoice;
+  amountPaid: number;
+  paymentDate: string;
+  paymentMethod: 'mpesa' | 'bank-transfer' | 'cash';
+  updatedAt: string;
+  createdAt: string;
+}
+export interface SubscriberTechnicalDetail {
+  id: string;
+  subscriber: string | Subscriber;
+  vlanId: number;
+  connectionType: 'pppoe' | 'ipoe-dhcp';
+  radiusUsername: string;
+  radiusPassword: string;
+  macAddress?: string;
+  assignedIp?: string;
+  ispOwner: string | Company;
   updatedAt: string;
   createdAt: string;
 }
@@ -366,45 +410,15 @@ export interface Ticket {
   updatedAt: string;
   createdAt: string;
 }
-export interface CrisisEvent {
+export interface WorkOrder {
   id: string;
-  rootCauseDevice?: string | NetworkDevice;
-  affectedSubscribers?: string[] | Subscriber[];
-  status?: 'ongoing' | 'resolved';
-  description?: string;
-  startTime?: string;
-  endTime?: string;
   ispOwner: string | Company;
-  updatedAt: string;
-  createdAt: string;
-}
-export interface Message {
-  id: string;
-  recipient: string;
-  type: 'sms' | 'email' | 'push';
-  content: string;
-  status: 'sent' | 'failed';
-  triggerEvent?: string;
-  sentBy?: string | Staff;
-  bulkSend?: boolean;
-  ispOwner: string | Company;
-  updatedAt: string;
-  createdAt: string;
-}
-export interface Contact {
-  id: string;
-  phoneNumber: string;
-  fullName?: string;
-  source?: string;
-  ispOwner: string | Company;
-  updatedAt: string;
-  createdAt: string;
-}
-export interface MessageTemplate {
-  id: string;
-  templateName: string;
-  content: string;
-  ispOwner: string | Company;
+  orderType: 'new-installation' | 'repair' | 'upgrade' | 'other';
+  subscriber?: string | Subscriber;
+  status?: 'pending' | 'in-progress' | 'completed' | 'cancelled';
+  assignedTo?: string | Staff;
+  notes?: string;
+  ticket?: string | Ticket;
   updatedAt: string;
   createdAt: string;
 }

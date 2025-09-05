@@ -20,15 +20,17 @@
     }
   },
   "include": [
-    "src"
+    "src",
+    "src/create-admin.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "build",
+    "src/seed.ts"
   ],
   "ts-node": {
     "transpileOnly": true,
-    "swc": true,
+    "swc": false
   }
 }

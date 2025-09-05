@@ -1,6 +1,6 @@
-import { BeforeChangeHook } from 'payload/types';
+import { CollectionBeforeChangeHook } from 'payload/types';
 
-export const unitStatusAutomationHook: BeforeChangeHook = async ({ data, operation, originalDoc }) => {
+export const unitStatusAutomationHook: CollectionBeforeChangeHook = async ({ data, operation, originalDoc }) => {
   // On create or update, if a subscriber is linked, set status to 'Active Subscriber'
   if ('subscriber' in data && data.subscriber) {
     data.status = 'active-subscriber';

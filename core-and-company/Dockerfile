@@ -9,6 +9,7 @@ COPY package*.json ./
 
 # Install dependencies
 RUN yarn install
+RUN npm install -g ts-node
 
 # Copy the rest of the application code
 COPY . .
@@ -23,8 +24,11 @@ RUN ls -la /app
 RUN ls -la /app/src
 
 # Build the Payload CMS application
-RUN yarn build || true
-RUN cp src/payload-types.ts /app/payload-types.ts
+RUN yarn build:payload
+RUN yarn generate:types
+RUN ls -la /app/src
+RUN cat /app/src/payload-types.ts
+RUN yarn build:server
 
 # Expose the port Payload runs on
 EXPOSE 3000

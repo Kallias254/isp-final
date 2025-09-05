@@ -1,6 +1,6 @@
 import { CollectionConfig } from 'payload/types';
 import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook';
-import { sendNotification } from '../utils/notificationService'; // Import sendNotification
+// import { sendNotification } from '../utils/notificationService'; // Import sendNotification
 import { isAdminOrHasPermission } from '../utils/access';
 import { setIspOwnerHook } from '../hooks/setIspOwner';
 
@@ -89,68 +89,68 @@ const Tickets: CollectionConfig = {
 
         // --- Original Notification Logic ---
         // Only send notifications for 'create' or 'update' operations that change status
-        if (operation === 'create' || (operation === 'update' && previousDoc && previousDoc.status !== doc.status)) {
-          const ticket = doc;
+        // if (operation === 'create' || (operation === 'update' && previousDoc && previousDoc.status !== doc.status)) {
+        //   const ticket = doc;
 
-          // Fetch the subscriber to get deviceToken
-          const subscriber = await payload.findByID({
-            collection: 'subscribers',
-            id: typeof ticket.subscriber === 'object' ? ticket.subscriber.id : ticket.subscriber,
-          });
+        //   // Fetch the subscriber to get deviceToken
+        //   const subscriber = await payload.findByID({
+        //     collection: 'subscribers',
+        //     id: typeof ticket.subscriber === 'object' ? ticket.subscriber.id : ticket.subscriber,
+        //   });
 
-          if (!subscriber || !subscriber.deviceToken) {
-            payload.logger.warn(`Subscriber or deviceToken not found for ticket ${ticket.ticketID}. Skipping push notification.`);
-            return;
-          }
+        //   if (!subscriber) { // || !subscriber.deviceToken) {
+        //     payload.logger.warn(`Subscriber not found for ticket ${ticket.ticketID}. Skipping push notification.`);
+        //     return;
+        //   }
 
-          let title = '';
-          let content = '';
-          let triggerEvent = '';
+        //   let title = '';
+        //   let content = '';
+        //   let triggerEvent = '';
 
-          if (operation === 'create') {
-            title = 'New Support Ticket Created!';
-            content = `Your ticket #${ticket.ticketID} for "${ticket.subject}" has been created. We'll get back to you soon.`;
-            triggerEvent = 'ticket.created';
-          } else if (operation === 'update') {
-            switch (ticket.status) {
-              case 'in-progress':
-                title = 'Ticket In Progress!';
-                content = `Your ticket #${ticket.ticketID} for "${ticket.subject}" is now in progress.`;
-                triggerEvent = 'ticket.status_in_progress';
-                break;
-              case 'resolved':
-                title = 'Ticket Resolved!';
-                content = `Your ticket #${ticket.ticketID} for "${ticket.subject}" has been resolved. Please let us know if you have any further issues.`;
-                triggerEvent = 'ticket.status_resolved';
-                break;
-              case 'closed':
-                title = 'Ticket Closed!';
-                content = `Your ticket #${ticket.ticketID} for "${ticket.subject}" has been closed.`;
-                triggerEvent = 'ticket.status_closed';
-                break;
-              // Add other statuses as needed
-            }
-          }
+        //   if (operation === 'create') {
+        //     title = 'New Support Ticket Created!';
+        //     content = `Your ticket #${ticket.ticketID} for "${ticket.subject}" has been created. We'll get back to you soon.`;
+        //     triggerEvent = 'ticket.created';
+        //   } else if (operation === 'update') {
+        //     switch (ticket.status) {
+        //       case 'in-progress':
+        //         title = 'Ticket In Progress!';
+        //         content = `Your ticket #${ticket.ticketID} for "${ticket.subject}" is now in progress.`;
+        //         triggerEvent = 'ticket.status_in_progress';
+        //         break;
+        //       case 'resolved':
+        //         title = 'Ticket Resolved!';
+        //         content = `Your ticket #${ticket.ticketID} for "${ticket.subject}" has been resolved. Please let us know if you have any further issues.`;
+        //         triggerEvent = 'ticket.status_resolved';
+        //         break;
+        //       case 'closed':
+        //         title = 'Ticket Closed!';
+        //         content = `Your ticket #${ticket.ticketID} for "${ticket.subject}" has been closed.`;
+        //         triggerEvent = 'ticket.status_closed';
+        //         break;
+        //       // Add other statuses as needed
+        //     }
+        //   }
 
-          if (title && content) {
-            await sendNotification({
-              payload: payload,
-              recipient: subscriber.id,
-              type: 'push',
-              deviceToken: subscriber.deviceToken,
-              title: title,
-              content: content,
-              triggerEvent: triggerEvent,
-              data: {
-                ticketId: ticket.id,
-                ticketID: ticket.ticketID,
-                subscriberId: subscriber.id,
-              },
-              ispOwner: ticket.ispOwner,
-            });
-            payload.logger.info(`Push notification sent for ticket ${ticket.ticketID} (event: ${triggerEvent})`);
-          }
-        }
+        //   if (title && content) {
+        //     await sendNotification({
+        //       payload: payload,
+        //       recipient: subscriber.id,
+        //       type: 'push',
+        //       // deviceToken: subscriber.deviceToken,
+        //       title: title,
+        //       content: content,
+        //       triggerEvent: triggerEvent,
+        //       data: {
+        //         ticketId: ticket.id,
+        //         ticketID: ticket.ticketID,
+        //         subscriberId: subscriber.id,
+        //       },
+        //       ispOwner: ticket.ispOwner,
+        //     });
+        //     payload.logger.info(`Push notification sent for ticket ${ticket.ticketID} (event: ${triggerEvent})`);
+        //   }
+        // }
       },
     ],
     afterDelete: [getAuditLogDeleteHook('tickets')],

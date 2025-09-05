@@ -50,7 +50,7 @@ const WorkOrders: CollectionConfig = {
           let assignedIpAddress = null;
 
           // IP Assignment Logic
-          if (servicePlan.ipAssignmentType === 'static-public') {
+          if (servicePlan.ipAssignmentType === 'static-pool') {
             // Query for an Available IP from the plan's linked staticIpPool
             const ipSubnetId = typeof servicePlan.staticIpPool === 'object' ? servicePlan.staticIpPool.id : servicePlan.staticIpPool;
 
@@ -120,7 +120,6 @@ const WorkOrders: CollectionConfig = {
             id: subscriber.id,
             data: {
               status: 'active',
-              assignedIp: assignedIpAddress, // Update assigned IP in subscriber record
             },
           });
 

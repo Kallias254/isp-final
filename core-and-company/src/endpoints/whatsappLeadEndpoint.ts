@@ -6,9 +6,9 @@ const whatsappLeadEndpoint: Endpoint = {
   method: 'post',
   handler: async (req, res) => {
     const payload: Payload = req.payload;
-    const { phoneNumber, subscriberName, serviceLocation, notes } = req.body;
+    const { phoneNumber, subscriberName, buildingUnit, notes } = req.body;
 
-    if (!phoneNumber || !subscriberName || !serviceLocation) {
+    if (!phoneNumber || !subscriberName || !buildingUnit) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
@@ -38,7 +38,7 @@ const whatsappLeadEndpoint: Endpoint = {
           referredBy: partner.id,
           subscriberName,
           subscriberPhone: phoneNumber,
-          location: serviceLocation,
+          buildingUnit: buildingUnit,
           notes,
           ispOwner: partner.ispOwner, // Assign ispOwner from the Partner
         },

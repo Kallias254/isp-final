@@ -15,77 +15,36 @@ const Subscribers: CollectionConfig = {
     delete: isAdminOrHasPermission('delete', 'subscribers'),
   },
   hooks: {
-    beforeChange: [
-      setIspOwnerHook,
+    beforeValidate: [
       async ({ data, operation }) => {
-        // On create, if trialDays are provided, calculate the trialEndDate and nextDueDate
-        if (operation === 'create' && data.trialDays && data.trialDays > 0) {
-          const now = new Date();
-          const endDate = new Date(now.setDate(now.getDate() + data.trialDays));
-          data.trialEndDate = endDate.toISOString();
-          data.nextDueDate = endDate.toISOString();
-        } else if (operation === 'create') {
-            // Standard signup, set next due date to now
-            data.nextDueDate = new Date().toISOString();
+        if (operation === 'create') {
+          // Generate a unique account number if one isn't provided
+          if (!data.accountNumber) {
+            data.accountNumber = `ACC-${Math.random().toString().substring(2, 8)}`;
+          }
+
+          // Calculate the nextDueDate if one isn't provided
+          if (!data.nextDueDate) {
+            const now = new Date();
+            if (data.isTrial && data.trialDays && data.trialDays > 0) {
+              // For trial users, set due date to the end of the trial
+              const endDate = new Date(now.setDate(now.getDate() + data.trialDays));
+              data.nextDueDate = endDate.toISOString();
+            } else {
+              // For non-trial users, set due date to 30 days from now
+              const endDate = new Date(now.setDate(now.getDate() + 30));
+              data.nextDueDate = endDate.toISOString();
+            }
+          }
         }
         return data;
       },
     ],
+    beforeChange: [
+      setIspOwnerHook,
+    ],
     afterChange: [
       getAuditLogHook('subscribers'),
-      // On create, if it's a trial signup with upfront charges, create an invoice for those charges
-      async ({ doc, operation, req }) => {
-        const { payload } = req;
-        if (operation === 'create' && doc.trialDays > 0 && doc.upfrontCharges && doc.upfrontCharges.length > 0) {
-          const { upfrontCharges, id: subscriberId } = doc;
-
-          let totalUpfrontAmount = 0;
-          const lineItems = upfrontCharges.map(charge => {
-            totalUpfrontAmount += charge.quantity * charge.price;
-            return charge;
-          });
-
-          await payload.create({
-            collection: 'invoices',
-            data: {
-              invoiceNumber: `INV-UPFRONT-${Date.now()}`,
-              subscriber: subscriberId,
-              amountDue: totalUpfrontAmount,
-              dueDate: new Date().toISOString(),
-              status: 'unpaid',
-              lineItems: lineItems,
-              ispOwner: doc.ispOwner, // Assign ispOwner from the Subscriber
-            },
-          });
-          payload.logger.info(`Upfront charges invoice created for new trial subscriber ${subscriberId}.`);
-        }
-      },
-      async ({ doc, previousDoc, req }) => {
-        // If status changed to 'Disconnected'
-        if (doc.status === 'disconnected' && previousDoc.status !== 'disconnected' && doc.buildingUnit) {
-            const { payload } = req;
-            const buildingUnitId = typeof doc.buildingUnit === 'object' ? doc.buildingUnit.id : doc.buildingUnit;
-    
-            // Find the building unit
-            const buildingUnit = await payload.findByID({
-                collection: 'building-units',
-                id: buildingUnitId,
-            });
-    
-            if (buildingUnit) {
-                // Update the building unit
-                await payload.update({
-                    collection: 'building-units',
-                    id: buildingUnitId,
-                    data: {
-                        status: 'former-subscriber',
-                        subscriber: null,
-                    },
-                });
-                payload.logger.info(`Building unit ${buildingUnitId} status updated to 'former-subscriber' and subscriber link cleared.`);
-            }
-        }
-      }
     ],
     afterDelete: [getAuditLogDeleteHook('subscribers')],
   },
@@ -103,12 +62,6 @@ const Subscribers: CollectionConfig = {
         },
     },
     {
-      name: 'accountNumber',
-      type: 'text',
-      required: true,
-      unique: true,
-    },
-    {
       name: 'firstName',
       type: 'text',
       required: true,
@@ -119,26 +72,32 @@ const Subscribers: CollectionConfig = {
       required: true,
     },
     {
-      name: 'contactPhone',
+      name: 'accountNumber',
       type: 'text',
       required: true,
+      unique: true,
+    },
+    {
+      name: 'mpesaNumber',
+      type: 'text',
+      required: true,
+    },
+    {
+      name: 'contactPhone',
+      type: 'text',
     },
     {
       name: 'email',
       type: 'email',
     },
     {
-      name: 'mpesaNumber',
-      type: 'text',
-    },
-    {
       name: 'status',
       type: 'select',
       options: [
+        { label: 'Pending-Installation', value: 'pending-installation' },
         { label: 'Active', value: 'active' },
         { label: 'Suspended', value: 'suspended' },
-        { label: 'Pending Installation', value: 'pending-installation' },
-        { label: 'Disconnected', value: 'disconnected' },
+        { label: 'Deactivated', value: 'deactivated' },
       ],
       defaultValue: 'pending-installation',
       required: true,
@@ -150,14 +109,16 @@ const Subscribers: CollectionConfig = {
       required: true,
     },
     {
-      name: 'billingCycle',
-      type: 'select',
-      options: [
-        { label: 'Monthly', value: 'monthly' },
-        { label: 'Quarterly', value: 'quarterly' },
-        { label: 'Annually', value: 'annually' },
-      ],
-      required: true,
+      name: 'isTrial',
+      type: 'checkbox',
+      defaultValue: false,
+    },
+    {
+      name: 'trialDays',
+      type: 'number',
+      admin: {
+        condition: (data) => data.isTrial === true,
+      }
     },
     {
       name: 'nextDueDate',
@@ -170,95 +131,12 @@ const Subscribers: CollectionConfig = {
       defaultValue: 0,
     },
     {
-      name: 'lastPaymentDate',
-      type: 'date',
-    },
-    {
-      name: 'trialDays',
-      type: 'number',
-      admin: {
-        description: 'Number of trial days for new signups',
-      },
-    },
-    {
-      name: 'trialEndDate',
-      type: 'date',
-      admin: {
-        readOnly: true,
-      },
-    },
-    {
-      name: 'upfrontCharges',
-      type: 'array',
-      fields: [
-        {
-          name: 'description',
-          type: 'text',
-        },
-        {
-          name: 'quantity',
-          type: 'number',
-        },
-        {
-          name: 'price',
-          type: 'number',
-        },
-      ],
-    },
-    {
-      name: 'internalNotes',
+      name: 'addressNotes',
       type: 'textarea',
     },
     {
-        name: 'buildingUnit',
-        type: 'relationship',
-        relationTo: 'building-units',
-        hasMany: false,
-    },
-    {
-      name: 'connectionType',
-      type: 'select',
-      options: [
-        { label: 'Fiber', value: 'fiber' },
-        { label: 'Wireless', value: 'wireless' },
-      ],
-    },
-    {
-      name: 'assignedIp',
-      type: 'text',
-      admin: {
-        readOnly: true,
-      },
-    },
-    {
-      name: 'cpeDevice',
-      type: 'relationship',
-      relationTo: 'network-devices',
-      admin: {
-        description: 'Customer Premise Equipment assigned to this subscriber',
-      },
-    },
-    {
-      name: 'radiusPassword',
-      type: 'text',
-      admin: {
-        readOnly: true,
-        description: 'Auto-generated RADIUS password',
-      },
-    },
-    {
-      name: 'deviceToken',
-      type: 'text',
-      admin: {
-        hidden: true,
-      },
-    },
-    {
-      name: 'gracePeriodEndDate',
-      type: 'date',
-      admin: {
-        description: 'Date until which service remains active despite overdue payment',
-      },
+      name: 'internalNotes',
+      type: 'richText',
     },
   ],
 };

@@ -1,6 +1,6 @@
 import { buildConfig } from 'payload/config';
 import path from 'path';
-import { seed } from './seed';
+
 import { monitoringService } from './utils/monitoringService'; // Import the service instance
 import { getSubscriberConnectionStatus } from './endpoints/subscriberConnectionStatusEndpoint';
 import monitoringWebhookEndpoint from './endpoints/monitoringWebhookEndpoint';
@@ -26,6 +26,7 @@ import Plans from './collections/Plans';
 import ServiceLocations from './collections/ServiceLocations';
 import StaffCollection from './collections/Staff';
 import Subscribers from './collections/Subscribers';
+import SubscriberTechnicalDetails from './collections/SubscriberTechnicalDetails';
 import Tickets from './collections/Tickets';
 import WorkOrders from './collections/WorkOrders';
 import Company from './collections/core/Company';
@@ -57,6 +58,7 @@ export default buildConfig({
     ServiceLocations,
     StaffCollection,
     Subscribers,
+    SubscriberTechnicalDetails,
     Tickets,
     WorkOrders,
     Company,
@@ -73,7 +75,6 @@ export default buildConfig({
     schemaOutputFile: path.resolve(__dirname, 'generated-schema.graphql'),
   },
   onInit: async (payload) => {
-    await seed(payload);
     // Initialize the monitoring service with the payload instance
     monitoringService.init(payload);
   },

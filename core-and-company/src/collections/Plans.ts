@@ -30,58 +30,99 @@ const Plans: CollectionConfig = {
       name: 'downloadSpeed',
       type: 'number',
       required: true,
+      admin: {
+        description: 'in Mbps',
+      }
     },
     {
       name: 'uploadSpeed',
       type: 'number',
       required: true,
+      admin: {
+        description: 'in Mbps',
+      }
     },
     {
       name: 'price',
       type: 'number',
       required: true,
-    },
-    {
-      name: 'billingCycle',
-      type: 'select',
-      options: [
-        { label: 'Monthly', value: 'monthly' },
-        { label: 'Quarterly', value: 'quarterly' },
-      ],
-      required: true,
-    },
-    {
-      name: 'notes',
-      type: 'text',
-    },
-    {
-      name: 'planEnabled',
-      type: 'checkbox',
-      defaultValue: true,
-    },
-    {
-      name: 'activeForNewSignups',
-      type: 'checkbox',
-      defaultValue: true,
-    },
-    {
-      name: 'ipAssignmentType',
-      type: 'select',
-      options: [
-        { label: 'Dynamic', value: 'dynamic' },
-        { label: 'Static-Public', value: 'static-public' },
-      ],
-      defaultValue: 'dynamic',
-      required: true,
-    },
-    {
-      name: 'staticIpPool',
-      type: 'relationship',
-      relationTo: 'ipSubnets',
-      hasMany: false,
       admin: {
-        condition: (_, siblingData) => siblingData?.ipAssignmentType === 'static-public',
-      },
+        description: 'in KES',
+      }
+    },
+    {
+      type: 'collapsible',
+      label: 'IP & RADIUS Logic',
+      fields: [
+        {
+          name: 'ipAssignmentType',
+          type: 'select',
+          options: [
+            { label: 'Dynamic-Pool', value: 'dynamic-pool' },
+            { label: 'Static-Pool', value: 'static-pool' },
+            { label: 'Static-Individual', value: 'static-individual' },
+          ],
+          required: true,
+        },
+        {
+          name: 'dynamicIpPool',
+          type: 'relationship',
+          relationTo: 'ipSubnets',
+          hasMany: false,
+          validate: (value, { siblingData }) => {
+            if (siblingData.ipAssignmentType === 'dynamic-pool' && !value) {
+              return 'This field is required for Dynamic-Pool plans.';
+            }
+            return true;
+          },
+          admin: {
+            condition: (_, siblingData) => siblingData.ipAssignmentType === 'dynamic-pool',
+          },
+        },
+        {
+          name: 'staticIpPool',
+          type: 'relationship',
+          relationTo: 'ipSubnets',
+          hasMany: false,
+          validate: (value, { siblingData }) => {
+            if (siblingData.ipAssignmentType === 'static-pool' && !value) {
+              return 'This field is required for Static-Pool plans.';
+            }
+            return true;
+          },
+          admin: {
+            condition: (_, siblingData) => siblingData.ipAssignmentType === 'static-pool',
+          },
+        },
+        {
+          name: 'sessionLimit',
+          type: 'number',
+          defaultValue: 1,
+          admin: {
+            description: 'Prevents account sharing (Simultaneous-Use).',
+          }
+        },
+      ]
+    },
+    {
+      type: 'collapsible',
+      label: 'Business Logic Fields',
+      fields: [
+        {
+          name: 'notes',
+          type: 'text',
+        },
+        {
+          name: 'planEnabled',
+          type: 'checkbox',
+          defaultValue: true,
+        },
+        {
+          name: 'activeForNewSignups',
+          type: 'checkbox',
+          defaultValue: true,
+        },
+      ]
     },
     {
       name: 'ispOwner',
@@ -89,10 +130,10 @@ const Plans: CollectionConfig = {
       relationTo: 'companies',
       required: true,
       access: {
-        update: () => false, // Prevent manual modification
+        update: () => false,
       },
       admin: {
-        hidden: true, // Hide from admin UI
+        hidden: true,
       },
     },
   ],

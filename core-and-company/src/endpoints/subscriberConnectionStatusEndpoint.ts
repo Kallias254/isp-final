@@ -1,5 +1,5 @@
 import { Endpoint } from 'payload/config';
-import { monitoringService } from '../utils/monitoringService';
+// import { monitoringService } from '../utils/monitoringService';
 
 export const getSubscriberConnectionStatus: Endpoint = {
   path: '/subscribers/:id/connection-status',
@@ -30,16 +30,16 @@ export const getSubscriberConnectionStatus: Endpoint = {
         return res.status(404).json({ error: 'Subscriber not found' });
       }
 
-      if (!subscriber.cpeDevice || typeof subscriber.cpeDevice !== 'object') {
-        return res.status(404).json({ error: 'No CPE device assigned to this subscriber.' });
-      }
+      // if (!subscriber.cpeDevice || typeof subscriber.cpeDevice !== 'object') {
+      //   return res.status(404).json({ error: 'No CPE device assigned to this subscriber.' });
+      // }
 
-      const cpeDevice = subscriber.cpeDevice;
+      // const cpeDevice = subscriber.cpeDevice;
 
-      // Use the singleton monitoringService to get the device status
-      const status = await monitoringService.getDeviceStatus(cpeDevice.id);
+      // // Use the singleton monitoringService to get the device status
+      // const status = await monitoringService.getDeviceStatus(cpeDevice.id);
 
-      return res.status(200).json(status);
+      return res.status(200).json({ status: 'unknown' });
 
     } catch (error) {
       payload.logger.error(error, `Error fetching connection status for subscriber ${params.id}`);

@@ -25,21 +25,19 @@ const Leads: CollectionConfig = {
           const newSubscriber = await req.payload.create({
             collection: 'subscribers',
             data: {
-              firstName: doc.subscriberName.split(' ')[0] || '', // Assuming first word is first name
-              lastName: doc.subscriberName.split(' ').slice(1).join(' ') || '', // Remaining words are last name
-              accountNumber: `ACC-${Date.now()}`, // Auto-generate a simple account number
+              firstName: doc.subscriberName.split(' ')[0] || '',
+              lastName: doc.subscriberName.split(' ').slice(1).join(' ') || '',
+              accountNumber: `ACC-${Date.now()}`,
               mpesaNumber: doc.subscriberPhone,
               contactPhone: doc.subscriberPhone,
-              email: `${doc.subscriberName.replace(/\s/g, '').toLowerCase()}@example.com`, // Generate a dummy email
+              email: `${doc.subscriberName.replace(/\s/g, '').toLowerCase()}@example.com`,
               status: 'pending-installation',
-              servicePlan: doc.preferredPlan, // Pass preferred plan
-              billingCycle: doc.preferredBillingCycle || 'monthly', // Pass preferred cycle or default to monthly
-              nextDueDate: new Date().toISOString(), // Set to today for now
+              servicePlan: doc.preferredPlan,
+              isTrial: false,
+              nextDueDate: new Date().toISOString(),
               accountBalance: 0,
               internalNotes: doc.notes,
-              buildingUnit: doc.buildingUnit, // Pass building unit
-              ispOwner: doc.ispOwner, // Assign ispOwner from the Lead
-              // connectionType and assignedIp will be managed by Ops
+              ispOwner: doc.ispOwner,
             },
           });
 
@@ -144,15 +142,7 @@ const Leads: CollectionConfig = {
         type: 'relationship',
         relationTo: 'plans',
     },
-    {
-        name: 'preferredBillingCycle',
-        type: 'select',
-        options: [
-            { label: 'Monthly', value: 'monthly' },
-            { label: 'Quarterly', value: 'quarterly' },
-            { label: 'Annually', value: 'annually' },
-        ],
-    },
+    
     {
         name: 'notes',
         type: 'textarea',

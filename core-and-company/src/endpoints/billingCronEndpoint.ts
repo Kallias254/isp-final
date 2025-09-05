@@ -16,7 +16,10 @@ const billingCronEndpoint: Endpoint = {
       const trialsEndingSoon = await payload.find({
         collection: 'subscribers',
         where: {
-          trialEndDate: {
+          isTrial: {
+            equals: true,
+          },
+          nextDueDate: {
             equals: threeDaysFromNow.toISOString().split('T')[0], // Compare date part only
           },
         },
@@ -37,13 +40,13 @@ const billingCronEndpoint: Endpoint = {
         where: {
           and: [
             {
-              nextDueDate: {
-                less_than_equal: new Date().toISOString(),
+              isTrial: {
+                equals: true,
               },
             },
             {
-              trialEndDate: {
-                exists: true,
+              nextDueDate: {
+                less_than_equal: new Date().toISOString(),
               },
             },
           ],
@@ -65,7 +68,7 @@ const billingCronEndpoint: Endpoint = {
             dueDate: new Date().toISOString(),
             status: 'unpaid',
             lineItems: [{
-              description: `Service Plan: ${servicePlan.name} (${servicePlan.billingCycle})`,
+              description: `Service Plan: ${servicePlan.name} (Monthly)`,
               quantity: 1,
               price: servicePlan.price,
             }],
@@ -74,19 +77,14 @@ const billingCronEndpoint: Endpoint = {
         });
 
         // Calculate next due date
-        let newNextDueDate = new Date(subscriber.nextDueDate);
-        if (servicePlan.billingCycle === 'monthly') {
-          newNextDueDate = addMonths(newNextDueDate, 1);
-        } else if (servicePlan.billingCycle === 'quarterly') {
-          newNextDueDate = addQuarters(newNextDueDate, 1);
-        }
+        const newNextDueDate = addMonths(new Date(subscriber.nextDueDate), 1);
 
-        // Transition user from trial to standard by removing trialEndDate and setting next due date
+        // Transition user from trial to standard by setting isTrial to false and updating the next due date
         await payload.update({
           collection: 'subscribers',
           id: subscriber.id,
           data: {
-            trialEndDate: null,
+            isTrial: false,
             nextDueDate: newNextDueDate.toISOString(),
           },
         });
@@ -108,8 +106,8 @@ const billingCronEndpoint: Endpoint = {
               },
             },
             {
-              trialEndDate: {
-                exists: false, // No trial end date
+              isTrial: {
+                not_equals: true,
               },
             },
           ],
@@ -135,7 +133,7 @@ const billingCronEndpoint: Endpoint = {
 
         // Add recurring plan fee
         lineItems.push({
-          description: `Service Plan: ${servicePlan.name} (${servicePlan.billingCycle})`,
+          description: `Service Plan: ${servicePlan.name} (Monthly)`,
           quantity: 1,
           price: servicePlan.price,
         });
@@ -156,12 +154,7 @@ const billingCronEndpoint: Endpoint = {
         });
 
         // 3. Update the Subscriber's nextDueDate to the next billing cycle
-        let newNextDueDate = new Date(subscriber.nextDueDate);
-        if (servicePlan.billingCycle === 'monthly') {
-          newNextDueDate = addMonths(newNextDueDate, 1);
-        } else if (servicePlan.billingCycle === 'quarterly') {
-          newNextDueDate = addQuarters(newNextDueDate, 1);
-        }
+        let newNextDueDate = addMonths(new Date(subscriber.nextDueDate), 1);
         // Add a small buffer to ensure it's always the next day, not same day if time is off
         newNextDueDate = addDays(newNextDueDate, 1);
 
@@ -178,56 +171,7 @@ const billingCronEndpoint: Endpoint = {
         // TODO: Fire invoice.created event for Communications module
       }
 
-      // Automated Suspension Logic
-      const overdueSubscribers = await payload.find({
-        collection: 'subscribers',
-        where: {
-          and: [
-            {
-              status: {
-                equals: 'active', // Only suspend active subscribers
-              },
-            },
-            {
-              nextDueDate: {
-                less_than: new Date().toISOString(), // Due date is in the past
-              },
-            },
-            {
-              or: [
-                {
-                  gracePeriodEndDate: {
-                    exists: false, // No grace period set
-                  },
-                },
-                {
-                  gracePeriodEndDate: {
-                    less_than: new Date().toISOString(), // Grace period has passed
-                  },
-                },
-              ],
-            },
-          ],
-        },
-      });
-
-      for (const subscriber of overdueSubscribers.docs) {
-        // Change Subscriber's status to Suspended
-        await payload.update({
-          collection: 'subscribers',
-          id: subscriber.id,
-          data: {
-            status: 'suspended',
-          },
-        });
-        payload.logger.info(`Subscriber ${subscriber.id} suspended due to overdue invoice.`);
-
-        payload.logger.info({
-          event: 'subscriber.suspended',
-          subscriberId: subscriber.id,
-          message: `Event: Subscriber ${subscriber.accountNumber} was suspended.`,
-        });
-      }
+      
 
       return res.status(200).json({ message: 'Automated billing cycle completed' });
     } catch (error: unknown) {

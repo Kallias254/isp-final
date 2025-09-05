@@ -35,8 +35,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Separator } from "./ui/separator"
 
-
-  navMain: [
+const navMain = [
     {
       title: "Dashboard",
       url: "/dashboard",
@@ -126,8 +125,8 @@ import { Separator } from "./ui/separator"
         },
       ],
     },
-  ],
-  navSecondary: [
+  ]
+const navSecondary = [
     {
       title: "System & Auditing",
       url: "/dashboard/system",
@@ -166,8 +165,7 @@ import { Separator } from "./ui/separator"
         },
       ],
     },
-  ],
-}
+  ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -175,9 +173,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain title="Main" items={data.navMain} />
+        <NavMain title="Main" items={navMain} />
         <Separator className="my-4" />
-        <NavMain title="System" items={data.navSecondary} />
+        <NavMain title="System" items={navSecondary} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
@@ -195,9 +193,9 @@ export function AppSidebarRail({
       <SidebarHeader>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain title="Main" items={data.navMain} isCollapsed />
+        <NavMain title="Main" items={navMain} isCollapsed />
         <Separator className="my-4" />
-        <NavMain title="System" items={data.navSecondary} isCollapsed />
+        <NavMain title="System" items={navSecondary} isCollapsed />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

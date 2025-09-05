@@ -94,6 +94,7 @@ services:
       - "DB_TIMEOUT=60"
       - "DISPATCHER_NODE_ID=dispatcher1"
       - "SIDECAR_DISPATCHER=1"
+      - "REDIS_HOST=redis"
     restart: always
     networks:
       - app-network

@@ -1,5 +1,6 @@
 # Use a Node.js base image
 FROM node:20-alpine
+RUN apk add --no-cache curl mysql-client
 
 # Set the working directory inside the container
 WORKDIR /app

@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { UnitSelector } from './unit-selector'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 
 const subscriberFormSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -32,6 +33,18 @@ const subscriberFormSchema = z.object({
   serviceLocation: z.string().optional(),
   building: z.string().optional(),
   buildingUnit: z.string().optional(),
+  connectionType: z.enum(['pppoe', 'ipoe', 'hotspot']).optional(),
+  username: z.string().optional(),
+  password: z.string().optional(),
+  macAddress: z.string().optional().refine(
+    (val) => !val || /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/.test(val),
+    'Invalid MAC Address format'
+  ),
+  staticIpAddress: z.string().optional().refine(
+    (val) => !val || /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(val),
+    'Invalid IP Address format'
+  ),
+  freeRadiusAttributes: z.string().optional(),
 })
 
 type SubscriberFormValues = z.infer<typeof subscriberFormSchema>
@@ -66,6 +79,8 @@ export function SubscriberForm({ subscriber }: { subscriber?: any }) {
     }
   }, [subscriber])
 
+  const [connectionType, setConnectionType] = React.useState(subscriber?.connectionType || 'pppoe');
+
   const form = useForm<SubscriberFormValues>({
     resolver: zodResolver(subscriberFormSchema),
     defaultValues: {
@@ -77,6 +92,12 @@ export function SubscriberForm({ subscriber }: { subscriber?: any }) {
       billingCycle: subscriber?.billingCycle || '',
       buildingUnit: subscriber?.buildingUnit?.id || '',
       status: subscriber?.status || 'pending-installation',
+      connectionType: subscriber?.connectionType || 'pppoe',
+      username: subscriber?.username || '',
+      password: subscriber?.password || '',
+      macAddress: subscriber?.macAddress || '',
+      staticIpAddress: subscriber?.staticIpAddress || '',
+      freeRadiusAttributes: subscriber?.freeRadiusAttributes || '',
     },
     values: { // To update accountNumber when it's generated
         firstName: subscriber?.firstName || '',
@@ -87,6 +108,12 @@ export function SubscriberForm({ subscriber }: { subscriber?: any }) {
         billingCycle: subscriber?.billingCycle || '',
         buildingUnit: subscriber?.buildingUnit?.id || '',
         status: subscriber?.status || 'pending-installation',
+        connectionType: subscriber?.connectionType || 'pppoe',
+        username: subscriber?.username || '',
+        password: subscriber?.password || '',
+        macAddress: subscriber?.macAddress || '',
+        staticIpAddress: subscriber?.staticIpAddress || '',
+        freeRadiusAttributes: subscriber?.freeRadiusAttributes || '',
     }
   })
 
@@ -188,6 +215,119 @@ export function SubscriberForm({ subscriber }: { subscriber?: any }) {
               )}
             />
             <UnitSelector />
+            <FormField
+              control={form.control}
+              name='connectionType'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Connection Type</FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setConnectionType(value);
+                    }}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder='Select connection type' />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value='pppoe'>PPPoE</SelectItem>
+                      <SelectItem value='ipoe'>IPoE/DHCP (MAC Locked)</SelectItem>
+                      <SelectItem value='hotspot'>Hotspot</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {connectionType === 'pppoe' && (
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                <FormField
+                  control={form.control}
+                  name='username'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Username</FormLabel>
+                      <FormControl>
+                        <Input placeholder='Enter username' {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='password'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type='password' placeholder='Enter password' {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {connectionType === 'ipoe' && (
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                <FormField
+                  control={form.control}
+                  name='macAddress'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>MAC Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder='e.g., AA:BB:CC:DD:EE:FF' {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='staticIpAddress'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Static IP Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder='e.g., 192.168.1.1' {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {connectionType === 'hotspot' && (
+              <div className='space-y-4'>
+                <p className='text-sm text-muted-foreground'>
+                  Hotspot specific fields will go here.
+                </p>
+              </div>
+            )}
+
+            <FormField
+              control={form.control}
+              name='freeRadiusAttributes'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>FreeRADIUS Attributes (JSON)</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder='Enter FreeRADIUS attributes as JSON' {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
               <FormField
                 control={form.control}

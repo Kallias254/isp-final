@@ -48,6 +48,22 @@ export const columns: ColumnDef<Subscriber>[] = [
     header: "Account Number",
   },
   {
+    accessorKey: "connectionType",
+    header: "Connection Type",
+    cell: ({ row }) => {
+      const connectionType = row.original.connectionType;
+      return connectionType ? connectionType.charAt(0).toUpperCase() + connectionType.slice(1) : '-';
+    },
+  },
+  {
+    accessorKey: "macAddress",
+    header: "MAC Address",
+    cell: ({ row }) => {
+      const macAddress = row.original.macAddress;
+      return macAddress || '-';
+    },
+  },
+  {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {

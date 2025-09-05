@@ -1,7 +1,7 @@
 /**
  * A reusable fetch wrapper that handles authentication for both client and server-side requests.
- * On the client, it uses `credentials: 'include'` to send cookies automatically.
- * On the server (SSR/RSC), it dynamically imports and uses `next/headers` to manually forward cookies.
+ * On the client, it uses a JWT token from local storage.
+ * On the server (SSR/RSC), it can be adapted to use other auth methods if needed.
  * @param url - The URL path to fetch (e.g., '/subscribers')
  * @param options - Optional RequestInit options to merge with defaults
  * @returns The fetch Response object
@@ -24,16 +24,16 @@ export async function apiFetch(url: string, options: RequestInit = {}): Promise<
     },
   };
 
-  if (typeof window === 'undefined') {
-    // On the server, dynamically import 'next/headers' and forward the cookies.
-    const { headers } = await import('next/headers');
-    const cookie = headers().get('cookie');
-    if (cookie) {
-      mergedOptions.headers.cookie = cookie;
+  if (typeof window !== 'undefined') {
+    // On the client, get the token from local storage
+    const token = localStorage.getItem('payload-token');
+    if (token) {
+      mergedOptions.headers['Authorization'] = `JWT ${token}`;
     }
   } else {
-    // On the client, the browser will handle cookies automatically.
-    mergedOptions.credentials = 'include';
+    // On the server, you might handle auth differently, e.g., with service accounts or forwarded headers.
+    // The previous cookie-forwarding logic is removed in favor of a clear token-based strategy.
+    // If server-side auth is needed, it should be implemented here.
   }
 
   const fullUrl = `${API_URL}${url}`;

@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { useState } from "react"
+import { useEffect } from "react"
+import { useRouter } from 'next/navigation'
 import { ColumnFiltersState, SortingState, VisibilityState } from "@tanstack/react-table"
 import { ChartAreaInteractive } from "@/components/chart-area-interactive"
 import { DataTable } from "@/components/data-table"
@@ -10,12 +11,10 @@ import { columns } from "./columns"
 import data from "@/data.json"
 import { useAuth } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 
 export default function Page() {
-  const { user, login, logout, isLoading } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { user, logout, isLoading } = useAuth();
+  const router = useRouter();
 
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -24,49 +23,15 @@ export default function Page() {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await login(email, password);
-    } catch (error) {
-      console.error("Failed to login");
-      // You can add user-facing error handling here
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login');
     }
-  };
+  }, [isLoading, user, router]);
 
-  if (isLoading) {
+  if (isLoading || !user) {
+    // You can render a loading spinner or a skeleton screen here
     return <div>Loading...</div>;
-  }
-
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <form onSubmit={handleLogin} className="p-8 bg-white rounded shadow-md w-96">
-          <h2 className="text-2xl font-bold mb-4">Login</h2>
-          <div className="mb-4">
-            <label className="block mb-2 text-sm font-medium">Email</label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-            />
-          </div>
-          <div className="mb-6">
-            <label className="block mb-2 text-sm font-medium">Password</label>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="********"
-              required
-            />
-          </div>
-          <Button type="submit" className="w-full">Login</Button>
-        </form>
-      </div>
-    );
   }
 
   return (

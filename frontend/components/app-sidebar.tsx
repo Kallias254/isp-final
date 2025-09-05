@@ -35,12 +35,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Separator } from "./ui/separator"
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
+
   navMain: [
     {
       title: "Dashboard",
@@ -185,7 +180,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain title="System" items={data.navSecondary} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
@@ -205,7 +200,7 @@ export function AppSidebarRail({
         <NavMain title="System" items={data.navSecondary} isCollapsed />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} isCollapsed />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

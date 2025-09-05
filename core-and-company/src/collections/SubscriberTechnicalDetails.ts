@@ -16,30 +16,59 @@ const SubscriberTechnicalDetails: CollectionConfig = {
     delete: isAdminOrHasPermission('delete', 'subscriber-technical-details'),
   },
   hooks: {
-    beforeChange: [
-      setIspOwnerHook,
+    beforeValidate: [
       async ({ data, req, operation }) => {
+        // --- Auto-generation on Create ---
         if (operation === 'create') {
-          // Auto-assign VLAN ID from a pool (placeholder)
-          data.vlanId = Math.floor(Math.random() * (4094 - 100 + 1) + 100); // Random VLAN between 100 and 4094
+          // Auto-assign VLAN ID if not provided
+          if (!data.vlanId) {
+            data.vlanId = Math.floor(Math.random() * (4094 - 100 + 1) + 100); // Random VLAN
+          }
 
+          // Auto-generate PPPoE credentials if not provided
           if (data.connectionType === 'pppoe') {
-            const subscriber = await req.payload.findByID({
-              collection: 'subscribers',
-              id: data.subscriber,
-            });
-
-            if (subscriber) {
-              // Auto-generate RADIUS username
-              data.radiusUsername = `${subscriber.firstName.toLowerCase()}.${subscriber.lastName.toLowerCase()}`;
+            if (!data.radiusUsername || !data.radiusPassword) {
+              const subscriber = await req.payload.findByID({ collection: 'subscribers', id: data.subscriber });
+              if (subscriber) {
+                if (!data.radiusUsername) {
+                  data.radiusUsername = `${subscriber.firstName.toLowerCase()}.${subscriber.lastName.toLowerCase()}.${Math.random().toString(36).slice(-4)}`;
+                }
+                if (!data.radiusPassword) {
+                  data.radiusPassword = Math.random().toString(36).slice(-8);
+                }
+              }
             }
-
-            // Auto-generate a random password
-            data.radiusPassword = Math.random().toString(36).slice(-8);
           }
         }
+
+        // --- Conditional Validation ---
+        const errors = [];
+        if (data.connectionType === 'pppoe') {
+          if (!data.radiusUsername) errors.push('RADIUS Username is required for PPPoE connections.');
+          if (!data.radiusPassword) errors.push('RADIUS Password is required for PPPoE connections.');
+        } else if (data.connectionType === 'ipoe-dhcp') {
+          if (!data.macAddress) errors.push('MAC Address is required for IPoE-DHCP connections.');
+        }
+
+        // --- Related Data Validation (assignedIp) ---
+        if (data.subscriber) {
+            const subscriber = await req.payload.findByID({ collection: 'subscribers', id: data.subscriber, depth: 1 });
+            if (subscriber && subscriber.servicePlan && typeof subscriber.servicePlan === 'object' && subscriber.servicePlan.ipAssignmentType === 'static-pool') {
+                if (!data.assignedIp) {
+                    errors.push('Assigned IP is required for plans with Static-Pool IP assignment.');
+                }
+            }
+        }
+
+        if (errors.length > 0) {
+          throw new Error(errors.join(' '));
+        }
+
         return data;
       },
+    ],
+    beforeChange: [
+      setIspOwnerHook,
     ],
     afterChange: [getAuditLogHook('subscriber-technical-details')],
     afterDelete: [getAuditLogDeleteHook('subscriber-technical-details')],

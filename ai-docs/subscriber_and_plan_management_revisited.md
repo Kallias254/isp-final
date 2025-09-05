@@ -1,4 +1,5 @@
-ISP System Design: Plans, Subscribers, and IP Logic
+# ISP System Design: Plans, Subscribers, and IP Logic
+
 This document outlines a refined data model and user interface workflow for managing subscribers and service plans within a FreeRADIUS-powered system. The design prioritizes simplicity, clarity, and a gradual user experience to make the platform less intimidating and more efficient.
 
 ## Core Principle: Security by Default with Automated VLANs
@@ -41,7 +42,7 @@ The moment the admin selects a Service Plan, the system reveals the context-spec
 
 **Connection Details Section:**
 
-*   A dropdown appears: **Assignment IP Type** (Options: PPPoE, IPoE-DHCP)
+*   A dropdown appears: **Assignment IP Type** (Options: PPPoE, IPoE-DHCP)ohyeah the trial period
     *   If **PPPoE** is selected: A "Credentials" area is shown with the auto-generated PPPoE Username and Password.
     *   If **IPoE-DHCP** is selected: A field for the user's MAC Address is shown.
 

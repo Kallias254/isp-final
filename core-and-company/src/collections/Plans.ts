@@ -1,4 +1,3 @@
-
 import { CollectionConfig } from 'payload/types'
 import { isAdminOrHasPermission } from '../utils/access'
 import { getAuditLogHook, getAuditLogDeleteHook } from '../hooks/auditLogHook'

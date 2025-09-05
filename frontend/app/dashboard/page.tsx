@@ -10,10 +10,9 @@ import { SectionCards } from "@/components/section-cards"
 import { columns } from "./columns"
 import data from "@/data.json"
 import { useAuth } from "@/lib/auth"
-import { Button } from "@/components/ui/button"
 
 export default function Page() {
-  const { user, logout, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   const [sorting, setSorting] = React.useState<SortingState>([])
@@ -36,10 +35,6 @@ export default function Page() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex justify-between items-center p-4">
-        <h1 className="text-2xl">Welcome, {user.name}</h1>
-        <Button onClick={logout}>Logout</Button>
-      </div>
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           <SectionCards />

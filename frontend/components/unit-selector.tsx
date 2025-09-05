@@ -1,18 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useFormContext } from 'react-hook-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { PlusIcon } from 'lucide-react';
 import { BuildingForm } from './building-form';
 import { UnitForm } from './unit-form';
+import { apiFetch } from '@/lib/api';
+import { Label } from '@/components/ui/label';
 
-// Assuming these types are defined somewhere
-// payload-types.ts might be a good place
+// Types moved to a more appropriate location if shared, here for simplicity
 interface ServiceLocation {
   id: string;
   name: string;
@@ -32,98 +31,100 @@ interface PayloadResponse<T> {
     docs: T[];
 }
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+// Use the authenticated apiFetch
+const fetcher = (url: string) => apiFetch(url).then(async (res) => {
+    if (!res.ok) {
+        throw new Error('Failed to fetch data');
+    }
+    return res.json();
+});
 
-export function UnitSelector() {
-  const { control, setValue } = useFormContext();
+interface UnitSelectorProps {
+    onUnitSelect: (unitId: string | null) => void;
+    initialLocationId?: string;
+    initialBuildingId?: string;
+    initialUnitId?: string;
+}
+
+export function UnitSelector({ 
+    onUnitSelect,
+    initialLocationId,
+    initialBuildingId,
+    initialUnitId 
+}: UnitSelectorProps) {
   const { mutate } = useSWRConfig();
-  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
-  const [selectedBuilding, setSelectedBuilding] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(initialLocationId || null);
+  const [selectedBuilding, setSelectedBuilding] = useState<string | null>(initialBuildingId || null);
+  const [selectedUnit, setSelectedUnit] = useState<string | null>(initialUnitId || null);
+
   const [isBuildingDialogOpen, setIsBuildingDialogOpen] = useState(false);
   const [isUnitDialogOpen, setIsUnitDialogOpen] = useState(false);
 
-  const buildingsUrl = selectedLocation ? `/api/buildings?where[serviceLocation][equals]=${selectedLocation}` : null;
-  const unitsUrl = selectedBuilding ? `/api/building-units?where[building][equals]=${selectedBuilding}` : null;
+  const buildingsUrl = selectedLocation ? `/buildings?where[location][equals]=${selectedLocation}` : null;
+  const unitsUrl = selectedBuilding ? `/building-units?where[building][equals]=${selectedBuilding}` : null;
 
-  const { data: locations } = useSWR<PayloadResponse<ServiceLocation>>('/api/service-locations', fetcher);
-  const { data: buildings } = useSWR<PayloadResponse<Building>>(buildingsUrl, fetcher);
-  const { data: units } = useSWR<PayloadResponse<BuildingUnit>>(unitsUrl, fetcher);
+  const { data: locationsData } = useSWR<PayloadResponse<ServiceLocation>>('/service-locations', fetcher);
+  const { data: buildingsData } = useSWR<PayloadResponse<Building>>(buildingsUrl, fetcher);
+  const { data: unitsData } = useSWR<PayloadResponse<BuildingUnit>>(unitsUrl, fetcher);
+
+  useEffect(() => {
+    onUnitSelect(selectedUnit);
+  }, [selectedUnit, onUnitSelect]);
 
   const handleLocationChange = (value: string) => {
     setSelectedLocation(value);
     setSelectedBuilding(null);
-    setValue('building', null);
-    setValue('buildingUnit', null);
+    setSelectedUnit(null);
   }
 
   const handleBuildingChange = (value: string) => {
     setSelectedBuilding(value);
-    setValue('buildingUnit', null);
+    setSelectedUnit(null);
   }
 
   const onBuildingCreated = () => {
-    mutate(buildingsUrl);
+    if(buildingsUrl) mutate(buildingsUrl);
     setIsBuildingDialogOpen(false);
   }
 
   const onUnitCreated = () => {
-    mutate(unitsUrl);
+    if(unitsUrl) mutate(unitsUrl);
     setIsUnitDialogOpen(false);
   }
 
   return (
-    <div className="space-y-4">
-        <FormField
-          control={control}
-          name="serviceLocation"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Service Location</FormLabel>
-              <Select onValueChange={(value) => {
-                field.onChange(value);
-                handleLocationChange(value);
-              }} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a service location" />
-                  </SelectTrigger>
-                </FormControl>
+    <div className="space-y-4 p-4 border rounded-md">
+        <h3 class="text-lg font-medium">Location Details</h3>
+        <div className="space-y-2">
+            <Label>Service Location</Label>
+            <Select onValueChange={handleLocationChange} value={selectedLocation || ''}>
+                <SelectTrigger>
+                <SelectValue placeholder="Select a service location" />
+                </SelectTrigger>
                 <SelectContent>
-                  {locations?.docs.map((location) => (
+                {locationsData?.docs.map((location) => (
                     <SelectItem key={location.id} value={location.id}>
-                      {location.name}
+                    {location.name}
                     </SelectItem>
-                  ))}
+                ))}
                 </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            </Select>
+        </div>
 
-        <FormField
-          control={control}
-          name="building"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Building</FormLabel>
-              <div className="flex items-center gap-2">
-                <Select onValueChange={(value) => {
-                  field.onChange(value);
-                  handleBuildingChange(value);
-                }} defaultValue={field.value} disabled={!selectedLocation}>
-                  <FormControl>
+        <div className="space-y-2">
+            <Label>Building</Label>
+            <div className="flex items-center gap-2">
+                <Select onValueChange={handleBuildingChange} value={selectedBuilding || ''} disabled={!selectedLocation}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a building" />
+                        <SelectValue placeholder="Select a building" />
                     </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {buildings?.docs.map((building) => (
-                      <SelectItem key={building.id} value={building.id}>
-                        {building.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                    <SelectContent>
+                        {buildingsData?.docs.map((building) => (
+                        <SelectItem key={building.id} value={building.id}>
+                            {building.name}
+                        </SelectItem>
+                        ))}
+                    </SelectContent>
                 </Select>
                 <Dialog open={isBuildingDialogOpen} onOpenChange={setIsBuildingDialogOpen}>
                   <DialogTrigger asChild>
@@ -138,32 +139,23 @@ export function UnitSelector() {
                     <BuildingForm onSuccess={onBuildingCreated} />
                   </DialogContent>
                 </Dialog>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            </div>
+        </div>
 
-        <FormField
-          control={control}
-          name="buildingUnit"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Building Unit</FormLabel>
-              <div className="flex items-center gap-2">
-                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!selectedBuilding}>
-                  <FormControl>
+        <div className="space-y-2">
+            <Label>Building Unit</Label>
+            <div className="flex items-center gap-2">
+                <Select onValueChange={setSelectedUnit} value={selectedUnit || ''} disabled={!selectedBuilding}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a unit" />
+                        <SelectValue placeholder="Select a unit" />
                     </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {units?.docs.map((unit) => (
-                      <SelectItem key={unit.id} value={unit.id}>
-                        {unit.unitNumber}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                    <SelectContent>
+                        {unitsData?.docs.map((unit) => (
+                        <SelectItem key={unit.id} value={unit.id}>
+                            {unit.unitNumber}
+                        </SelectItem>
+                        ))}
+                    </SelectContent>
                 </Select>
                 <Dialog open={isUnitDialogOpen} onOpenChange={setIsUnitDialogOpen}>
                   <DialogTrigger asChild>
@@ -178,11 +170,8 @@ export function UnitSelector() {
                     <UnitForm buildingId={selectedBuilding} onSuccess={onUnitCreated} />
                   </DialogContent>
                 </Dialog>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            </div>
+        </div>
     </div>
   );
 }

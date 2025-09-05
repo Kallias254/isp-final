@@ -1,12 +1,12 @@
-"use client"
+'use client'
 
 import * as React from "react"
 import { ColumnFiltersState, SortingState, VisibilityState, Table } from "@tanstack/react-table"
+import useSWR from 'swr'
 
 import { Input } from "@/components/ui/input"
 import { DataTable } from "@/components/data-table"
 import { columns } from "./columns"
-import { subscribers } from "./mock-data"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,6 +20,9 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { IconLayoutColumns, IconChevronDown } from "@tabler/icons-react"
 import { Subscriber } from "@/payload-types"
 import Link from "next/link"
+import { apiFetch } from "@/lib/api"
+
+const fetcher = (url: string) => apiFetch(url).then(res => res.json());
 
 const CustomToolbar = (table: Table<Subscriber>) => (
     <div className="flex items-center justify-between py-4">
@@ -77,6 +80,11 @@ export default function SubscribersPage() {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
 
+  const { data: subscribersData, error, isLoading } = useSWR<any>('/subscribers', fetcher);
+
+  if (error) return <div>Failed to load subscribers. Please try again later.</div>
+  if (isLoading) return <div>Loading...</div>
+
   return (
     <div className="container mx-auto py-10">
         <Breadcrumb>
@@ -105,7 +113,7 @@ export default function SubscribersPage() {
         </div>
       <DataTable
         columns={columns}
-        data={subscribers}
+        data={subscribersData?.docs || []}
         toolbar={CustomToolbar}
         sorting={sorting}
         setSorting={setSorting}

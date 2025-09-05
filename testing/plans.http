@@ -1,0 +1,15 @@
+# =============================================
+# PLANS
+# =============================================
+
+###
+# @name getAllPlans
+# Get all plans
+GET http://localhost:3001/api/plans
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+###
+# @name getPlanById
+# Get a single plan by ID
+GET http://localhost:3001/api/plans/68bb1824d72980a577d8b10f
+Authorization: Bearer {{adminLogin.response.body.token}}

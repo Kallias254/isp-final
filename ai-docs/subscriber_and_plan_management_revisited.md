@@ -15,7 +15,6 @@ To achieve a simple user interface, the backend logic must be crystal clear. Her
 *   **The `ipAssignmentType` Field (The Brain):** This dropdown on the Plan will have three clear options:
     *   **Dynamic-Pool:** For standard PPPoE or IPoE customers who get the next available IP. This plan must be linked to a `dynamicIpPool`.
     *   **Static-Pool:** For business or premium customers who need a static IP, but you want to assign it to them from a pre-defined range (e.g., your "Public IP Pool"). This plan must be linked to a `staticIpPool`.
-    *   **Static-Individual:** A special case where the IP is manually defined elsewhere (less common, but useful for specific B2B clients).
 
 *   **The `subscribers` Collection (The Order):** When you create a new subscriber, you are simply linking a person to a plan. The system then automatically knows all the rules to apply based on the plan they are on.
 
@@ -42,7 +41,7 @@ The moment the admin selects a Service Plan, the system reveals the context-spec
 
 **Connection Details Section:**
 
-*   A dropdown appears: **Assignment IP Type** (Options: PPPoE, IPoE-DHCP)ohyeah the trial period
+*   A dropdown appears: **Assignment IP Type** (Options: PPPoE, IPoE-DHCP)
     *   If **PPPoE** is selected: A "Credentials" area is shown with the auto-generated PPPoE Username and Password.
     *   If **IPoE-DHCP** is selected: A field for the user's MAC Address is shown.
 
@@ -163,3 +162,23 @@ To implement the `subscriber_and_plan_management_revisited.md` document without 
     *   We will then address any remaining type errors in `seed.ts` that arise from the updated collection schemas.
 
 This methodical approach will help us maintain a stable development environment and address issues systematically.
+
+## Part 4: Backend Transactional Endpoint
+
+To support the unified creation form, a custom backend endpoint is required to ensure data integrity.
+
+### The Problem: Race Conditions and Partial Data
+
+The new user interface gathers data for both the `subscribers` and `subscriber_technical_details` collections in a single form. If the frontend were to make two separate API calls (one to create the subscriber, then a second to create the technical details), a failure in the second call would result in an orphaned "ghost" subscriber in the database without the necessary network information.
+
+### The Solution: A Transactional Endpoint
+
+A single, custom API endpoint, `/api/transactions/create-subscriber-with-details`, will be created. This endpoint will receive a single payload containing both `subscriberData` and `technicalData`.
+
+On the backend, this endpoint will perform the following actions within a transaction:
+1.  Create the `Subscriber` document.
+2.  Use the ID of the new subscriber to create the associated `SubscriberTechnicalDetails` document.
+3.  If selected, update the `BuildingUnit` to link it to the new subscriber.
+4.  If any step fails, the entire transaction is rolled back, preventing inconsistent data.
+
+This approach ensures that a subscriber is only created if all their required information can be saved successfully.

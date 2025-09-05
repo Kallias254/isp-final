@@ -4,6 +4,7 @@ import path from 'path';
 import { monitoringService } from './utils/monitoringService'; // Import the service instance
 import { getSubscriberConnectionStatus } from './endpoints/subscriberConnectionStatusEndpoint';
 import monitoringWebhookEndpoint from './endpoints/monitoringWebhookEndpoint';
+import { createSubscriberEndpoint } from './endpoints/createSubscriberWithDetails';
 
 // Import collections
 import AuditLogs from './collections/AuditLogs';
@@ -37,6 +38,9 @@ export default buildConfig({
   admin: {
     user: StaffCollection.slug,
   },
+  cors: [
+    'http://localhost:3000',
+  ],
   collections: [
     AuditLogs,
     Buildings,
@@ -67,6 +71,7 @@ export default buildConfig({
   endpoints: [
     getSubscriberConnectionStatus,
     monitoringWebhookEndpoint,
+    createSubscriberEndpoint,
   ],
   typescript: {
     outputFile: path.resolve(__dirname, 'payload-types.ts'),

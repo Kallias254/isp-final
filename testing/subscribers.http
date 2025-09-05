@@ -3,7 +3,35 @@
 # =============================================
 
 ###
-# Create a new subscriber
+# @name createSubscriberTransactional
+# Create a new subscriber with technical details (Transactional Endpoint)
+POST http://localhost:3001/api/transactions/create-subscriber-with-details
+Content-Type: application/json
+Authorization: Bearer {{adminLogin.response.body.token}}
+
+{
+  "subscriberData": {
+    "firstName": "Test",
+    "lastName": "Transactional",
+    "mpesaNumber": "254711223344",
+    "servicePlan": "68bb1824d72980a577d8b10f",
+    "status": "pending-installation",
+    "isTrial": false,
+    "addressNotes": "Test address notes for transactional creation.",
+    "internalNotes": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"Test internal notes for transactional creation.\"}]}]}"
+  },
+  "technicalData": {
+    "connectionType": "pppoe",
+    "radiusUsername": "test.transactional.user",
+    "radiusPassword": "transactionalpassword",
+    "macAddress": null,
+    "assignedIp": null
+  },
+  "unitId": null
+}
+
+###
+# Create a new subscriber (Old endpoint - does not include technical details)
 POST http://localhost:3001/api/subscribers
 Content-Type: application/json
 Authorization: Bearer {{adminLogin.response.body.token}}

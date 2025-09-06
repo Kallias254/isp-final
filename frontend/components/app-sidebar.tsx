@@ -37,7 +37,7 @@ import { Separator } from "./ui/separator"
 
 const navMain = [
     {
-      title: "Dashboard",
+      title: "Home",
       url: "/dashboard",
       icon: Home,
     },

@@ -33,14 +33,14 @@ import WorkOrders from './collections/WorkOrders';
 import Company from './collections/core/Company';
 import Roles from './collections/core/Roles';
 
+const frontendUrl = `http://localhost:${process.env.FRONTEND_PORT || 3002}`;
+
 export default buildConfig({
   serverURL: 'http://localhost:3001',
   admin: {
     user: StaffCollection.slug,
   },
-  cors: [
-    'http://localhost:3000',
-  ],
+  cors: [frontendUrl, 'http://localhost:3000'],
   collections: [
     AuditLogs,
     Buildings,

@@ -22,6 +22,7 @@ services:
       NODE_ENV: development
       PAYLOAD_PUBLIC_SERVER_URL: http://localhost:3001
       PAYLOAD_SEED: 'true'
+      CORS_ORIGINS: 'http://localhost:3002'
       LIBRENMS_API_URL: http://librenms:8000/api/v0
       LIBRENMS_API_KEY: 29de01522f979bd5d39e9b4c47a3aa47
     

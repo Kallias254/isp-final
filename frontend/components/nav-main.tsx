@@ -24,6 +24,7 @@ export function NavMain({
   items,
   title,
   isCollapsed,
+  initialOpenSections, // New prop
 }: {
   items: {
     title: string
@@ -36,9 +37,8 @@ export function NavMain({
   }[]
   title: string
   isCollapsed?: boolean
-}) {
+} & { initialOpenSections?: string[] }) {
   const pathname = usePathname()
-  const { openSections, setOpenSections } = useSidebar()
 
   return (
     <SidebarGroup>
@@ -62,9 +62,9 @@ export function NavMain({
             <Collapsible
               key={item.title}
               asChild
-              open={openSections.includes(item.title)}
+              open={initialOpenSections?.includes(item.title)}
               onOpenChange={(isOpen) => {
-                setOpenSections(isOpen ? [item.title] : [])
+                // This part will be handled by SidebarProvider's internal state
               }}
               className="group/collapsible"
             >

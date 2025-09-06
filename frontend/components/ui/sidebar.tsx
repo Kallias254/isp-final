@@ -63,21 +63,25 @@ function SidebarProvider({
   className,
   style,
   children,
+  initialOpenSections, // New prop
   ...props
 }: React.ComponentProps<"div"> & {
   defaultOpen?: boolean
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  initialOpenSections?: string[]; // New prop type
 }) {
   const isMobile = useIsMobile()
   const [openMobile, setOpenMobile] = React.useState(false)
-  const [openSections, setOpenSections] = React.useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
-        const savedOpenSections = localStorage.getItem(SIDEBAR_OPEN_SECTIONS_STORAGE_KEY)
-        return savedOpenSections ? JSON.parse(savedOpenSections) : []
+  const [openSections, setOpenSections] = React.useState<string[]>(initialOpenSections || [])
+
+  // Use useEffect to load from localStorage on client-side after initial render
+  React.useEffect(() => {
+    const savedOpenSections = localStorage.getItem(SIDEBAR_OPEN_SECTIONS_STORAGE_KEY)
+    if (savedOpenSections) {
+      setOpenSections(JSON.parse(savedOpenSections))
     }
-    return []
-  })
+  }, [])
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.

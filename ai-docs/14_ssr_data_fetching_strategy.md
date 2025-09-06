@@ -298,6 +298,8 @@ export function NavMain({
   initialOpenSections, // New prop
 }: { /* ... */ } & { initialOpenSections?: string[] }) {
   const pathname = usePathname()
+  const [openSections, setOpenSections] = React.useState<string[]>(initialOpenSections || [])
+
   // Pass initialOpenSections to SidebarProvider
   // The useSidebar hook will now get its initial state from the provider
   // No direct change to useSidebar call here, as it gets context from provider
@@ -344,6 +346,18 @@ function getInitialOpenSections(pathname: string): string[] {
   // based on the current pathname. For example:
   if (pathname.startsWith('/dashboard/crm')) {
     return ['CRM & Sales']; // Assuming 'CRM & Sales' is the title of the collapsible section
+  }
+  if (pathname.startsWith('/dashboard/billing')) {
+    return ['Billing & Finance'];
+  }
+  if (pathname.startsWith('/dashboard/operations')) {
+    return ['Operations & NOC'];
+  }
+  if (pathname.startsWith('/dashboard/support')) {
+    return ['Support & Comms'];
+  }
+  if (pathname.startsWith('/dashboard/system')) {
+    return ['System'];
   }
   // Add more conditions for other sections
   return []; // Default to no sections open

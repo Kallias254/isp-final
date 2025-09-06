@@ -28,6 +28,7 @@ services:
     
     depends_on:
       - mongodb
+      - librenms
     restart: always
     networks:
       - app-network

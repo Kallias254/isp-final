@@ -27,7 +27,7 @@ const start = async () => {
 
   // Add your own express routes here
 
-  app.listen(process.env.BACKEND_PORT || 3001)
+  app.listen(3000)
 }
 
 start()

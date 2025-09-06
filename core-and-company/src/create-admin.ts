@@ -3,11 +3,11 @@ import path from 'path';
 import dotenv from 'dotenv';
 
 dotenv.config({
-  path: path.resolve(__dirname, '../.env'),
+  path: path.resolve(__dirname, '../../.env'),
 });
 
 const createAdmin = async () => {
-  process.env.PAYLOAD_CONFIG_PATH = path.resolve(__dirname, './payload.config.ts');
+  process.env.PAYLOAD_CONFIG_PATH = path.resolve(__dirname, 'payload.config.js');
 
   await payload.init({
     local: true,
@@ -77,8 +77,9 @@ const createAdmin = async () => {
     console.log('Superadmin and ISP admin created successfully!');
   } catch (error) {
     console.error('Error creating superadmin and ISP admin:', error);
+    process.exit(1);
   } finally {
-    // payload.shutdown(); // Removed shutdown call
+    process.exit(0);
   }
 };
 

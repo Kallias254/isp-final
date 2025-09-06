@@ -1,13 +1,14 @@
-"use client"
+'use client'
 
-import { ChevronRight, type LucideIcon } from "lucide-react"
-import { usePathname } from "next/navigation"
+import React from 'react'
+import { ChevronRight, type LucideIcon } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from '@/components/ui/collapsible'
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -17,14 +18,12 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  useSidebar,
-} from "@/components/ui/sidebar"
+} from '@/components/ui/sidebar'
 
 export function NavMain({
   items,
   title,
   isCollapsed,
-  initialOpenSections, // New prop
 }: {
   items: {
     title: string
@@ -37,8 +36,16 @@ export function NavMain({
   }[]
   title: string
   isCollapsed?: boolean
-} & { initialOpenSections?: string[] }) {
+}) {
   const pathname = usePathname()
+
+  const initialActiveItem = items.find((item) =>
+    item.items?.some((subItem) => pathname.startsWith(subItem.url))
+  )
+
+  const [openSections, setOpenSections] = React.useState<string[]>(
+    initialActiveItem ? [initialActiveItem.title] : []
+  )
 
   return (
     <SidebarGroup>
@@ -54,7 +61,7 @@ export function NavMain({
               <SidebarMenuButton tooltip={item.title} asChild isActive={isActive}>
                 <a href={item.url}>
                   {item.icon && <item.icon />}
-                  <span className="sr-only">{item.title}</span>
+                  <span className='sr-only'>{item.title}</span>
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -62,18 +69,18 @@ export function NavMain({
             <Collapsible
               key={item.title}
               asChild
-              open={initialOpenSections?.includes(item.title)}
+              open={openSections.includes(item.title)}
               onOpenChange={(isOpen) => {
-                // This part will be handled by SidebarProvider's internal state
+                setOpenSections(isOpen ? [item.title] : [])
               }}
-              className="group/collapsible"
+              className='group/collapsible'
             >
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton isActive={isActive}>
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
-                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    <ChevronRight className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
@@ -82,7 +89,10 @@ export function NavMain({
                       const isSubItemActive = pathname.startsWith(subItem.url)
                       return (
                         <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton asChild isActive={isSubItemActive}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={isSubItemActive}
+                          >
                             <a href={subItem.url}>
                               <span>{subItem.title}</span>
                             </a>

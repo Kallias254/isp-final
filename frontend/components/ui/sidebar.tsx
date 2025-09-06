@@ -75,14 +75,6 @@ function SidebarProvider({
   const [openMobile, setOpenMobile] = React.useState(false)
   const [openSections, setOpenSections] = React.useState<string[]>(initialOpenSections || [])
 
-  // Use useEffect to load from localStorage on client-side after initial render
-  React.useEffect(() => {
-    const savedOpenSections = localStorage.getItem(SIDEBAR_OPEN_SECTIONS_STORAGE_KEY)
-    if (savedOpenSections) {
-      setOpenSections(JSON.parse(savedOpenSections))
-    }
-  }, [])
-
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
   const [_open, _setOpen] = React.useState(defaultOpen)
@@ -122,10 +114,6 @@ function SidebarProvider({
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [toggleSidebar])
-
-  React.useEffect(() => {
-    localStorage.setItem(SIDEBAR_OPEN_SECTIONS_STORAGE_KEY, JSON.stringify(openSections))
-  }, [openSections])
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.

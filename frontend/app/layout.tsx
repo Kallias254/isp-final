@@ -43,12 +43,12 @@ function getInitialOpenSections(pathname: string): string[] {
   return []; // Default to no sections open
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headersList = headers();
+  const headersList = await headers();
   const pathname = headersList.get('x-pathname') || ''; // Get pathname from headers
   const initialOpenSections = getInitialOpenSections(pathname);
 

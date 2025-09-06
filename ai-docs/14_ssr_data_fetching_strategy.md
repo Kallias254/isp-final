@@ -111,16 +111,267 @@ export default async function SubscribersPage() {
 ```
 *Note: The `<DataTable>` component and its associated hooks (`useState`, etc.) will need to be extracted into their own Client Component, as hooks are not allowed in Server Components. The `SubscribersPage` will then import and render this new client component, passing the server-fetched data as a prop.*
 
-## 5. Plan for Other Modules
+### Step 3: Server-Side Authentication for `apiFetch`
 
-Once the `Subscribers` page is successfully refactored and working, the **exact same SSR pattern** will be applied to the following list pages, replacing their mock data:
+When fetching data from Server Components, `localStorage` is not available. We need to retrieve the authentication token from the incoming request's cookies and pass it to `apiFetch`.
 
--   `.../billing/invoices/page.tsx`
--   `.../billing/payments/page.tsx`
--   `.../crm/leads/page.tsx`
--   `.../crm/buildings/page.tsx`
--   `.../support/tickets/page.tsx`
--   And all other major list pages.
+**Modify `apiFetch` (`frontend/lib/api.ts`):**
+
+Add an optional `token` parameter to `apiFetch` that takes precedence over `localStorage`.
+
+```tsx
+// frontend/lib/api.ts
+export async function apiFetch(url: string, options: RequestInit = {}, token?: string): Promise<Response> {
+  // ... (existing code)
+
+  // Prioritize the token passed as an argument
+  if (token) {
+    mergedOptions.headers['Authorization'] = `JWT ${token}`;
+  } else if (typeof window !== 'undefined') {
+    // On the client, get the token from local storage if not provided as an argument
+    const clientToken = localStorage.getItem('payload-token');
+    if (clientToken) {
+      mergedOptions.headers['Authorization'] = `JWT ${clientToken}`;
+    }
+  }
+  // ... (rest of the code)
+}
+```
+
+**Update `getSubscribers` in Server Components:**
+
+Retrieve the token from cookies using `cookies()` from `next/headers` and pass it to `apiFetch`.
+
+**AFTER:**
+```tsx
+// No 'use client' directive
+
+import * as React from "react"
+// ... other imports
+import { apiFetch } from "@/lib/api"
+import { Subscriber } from "@/payload-types"
+import { cookies } from 'next/headers'; // Import cookies
+
+// 1. Define a function to fetch the data on the server
+async function getSubscribers() {
+  try {
+    const cookieStore = cookies();
+    const token = cookieStore.get('payload-token')?.value; // Get token from cookies
+
+    const response = await apiFetch('/subscribers', {}, token); // Pass token to apiFetch
+    if (!response.ok) {
+      throw new Error('Failed to fetch subscribers');
+    }
+    const data = await response.json();
+    return data.docs as Subscriber[];
+  } catch (error) {
+    console.error(error);
+    return []; // Return an empty array on error
+  }
+}
+
+// 2. Make the page component async and call the fetch function
+export default async function SubscribersPage() {
+  const subscribersData = await getSubscribers();
+
+  // Note: The DataTable component itself will need to be a client component
+  // if it uses hooks like useState. We will wrap it or the state management part.
+
+  return (
+    <div className="container mx-auto py-10">
+      {/* ... Breadcrumb and Header ... */}
+      <DataTable
+        columns={columns}
+        data={subscribersData}
+        // ... other props
+      />
+    </div>
+  )
+}
+
+```
+*Note: The `<DataTable>` component and its associated hooks (`useState`, etc.) will need to be extracted into their own Client Component, as hooks are not allowed in Server Components. The `SubscribersPage` will then import and render this new client component, passing the server-fetched data as a prop.*
+
+## 5. Sidebar Hydration Fix
+
+The sidebar often causes hydration mismatches due to its interactive nature and reliance on client-side APIs like `localStorage` or `window` for initial state.
+
+### Problem
+
+The `SidebarProvider` in `frontend/components/ui/sidebar.tsx` initializes `openSections` (which controls collapsible menu items) by reading from `localStorage`. `localStorage` is not available during Server-Side Rendering, leading to a mismatch between the server-rendered HTML (where sections are closed by default) and the client-rendered HTML (where sections might open based on saved `localStorage` state).
+
+### Solution
+
+We will ensure the initial state of the sidebar is consistent between server and client by:
+
+1.  **Determining `openSections` on the server:** The `layout.tsx` (a Server Component) will determine which sidebar sections should be open based on the current `pathname` (URL).
+2.  **Passing `openSections` as a prop:** The `SidebarProvider` will receive this server-determined `openSections` as an `initialOpenSections` prop.
+3.  **Client-side persistence:** `SidebarProvider` will still use `localStorage` to persist `openSections` changes made by the user on the client, but this will happen *after* the initial render to avoid hydration mismatches.
+
+### Code Changes
+
+**1. Modify `SidebarProvider` (`frontend/components/ui/sidebar.tsx`):**
+
+*   Remove `localStorage` initialization for `openSections`.
+*   Accept `initialOpenSections` as a prop.
+*   Use `useEffect` to load and save `openSections` to `localStorage` on the client side.
+
+**BEFORE:**
+```tsx
+// frontend/components/ui/sidebar.tsx
+const [openSections, setOpenSections] = React.useState<string[]>(() => {
+  if (typeof window !== 'undefined') {
+      const savedOpenSections = localStorage.getItem(SIDEBAR_OPEN_SECTIONS_STORAGE_KEY)
+      return savedOpenSections ? JSON.parse(savedOpenSections) : []
+  }
+  return []
+})
+
+// ...
+
+React.useEffect(() => {
+  localStorage.setItem(SIDEBAR_OPEN_SECTIONS_STORAGE_KEY, JSON.stringify(openSections))
+}, [openSections])
+
+// ... (other parts of SidebarProvider)
+```
+
+**AFTER:**
+```tsx
+// frontend/components/ui/sidebar.tsx
+// Add initialOpenSections to SidebarProvider props
+function SidebarProvider({
+  initialOpenSections,
+  // ... other props
+}: React.ComponentProps<"div"> & {
+  initialOpenSections?: string[];
+  // ... other prop types
+}) {
+  const [openSections, setOpenSections] = React.useState<string[]>(initialOpenSections || []);
+
+  // Use useEffect to load from localStorage on client-side after initial render
+  React.useEffect(() => {
+    const savedOpenSections = localStorage.getItem(SIDEBAR_OPEN_SECTIONS_STORAGE_KEY);
+    if (savedOpenSections) {
+      setOpenSections(JSON.parse(savedOpenSections));
+    }
+  }, []);
+
+  // Use useEffect to save to localStorage whenever openSections changes
+  React.useEffect(() => {
+    localStorage.setItem(SIDEBAR_OPEN_SECTIONS_STORAGE_KEY, JSON.stringify(openSections));
+  }, [openSections]);
+
+  // ... (rest of SidebarProvider)
+}
+```
+
+**2. Modify `NavMain` (`frontend/components/nav-main.tsx`):**
+
+*   `NavMain` will remain a Client Component (`'use client'`).
+*   It will continue to use `usePathname()` to determine `isActive` states.
+*   It will receive `initialOpenSections` as a prop from `layout.tsx` and pass it to `SidebarProvider`.
+
+**BEFORE:**
+```tsx
+// frontend/components/nav-main.tsx
+export function NavMain({
+  items,
+  title,
+  isCollapsed,
+}: { /* ... */ }) {
+  const pathname = usePathname()
+  const { openSections, setOpenSections } = useSidebar()
+
+  // ... (rest of NavMain)
+}
+```
+
+**AFTER:**
+```tsx
+// frontend/components/nav-main.tsx
+// NavMain will receive initialOpenSections as a prop
+export function NavMain({
+  items,
+  title,
+  isCollapsed,
+  initialOpenSections, // New prop
+}: { /* ... */ } & { initialOpenSections?: string[] }) {
+  const pathname = usePathname()
+  // Pass initialOpenSections to SidebarProvider
+  // The useSidebar hook will now get its initial state from the provider
+  // No direct change to useSidebar call here, as it gets context from provider
+
+  // ... (rest of NavMain)
+}
+```
+
+**3. Modify `RootLayout` (`frontend/app/layout.tsx`):**
+
+*   `RootLayout` is a Server Component.
+*   It will determine the `initialOpenSections` based on the `pathname` (using `headers()` from `next/headers` to get the URL).
+*   It will pass this `initialOpenSections` to `SidebarProvider`.
+
+**BEFORE:**
+```tsx
+// frontend/app/layout.tsx
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+**AFTER:**
+```tsx
+// frontend/app/layout.tsx
+import { headers } from 'next/headers'; // Import headers
+import { AuthProvider } from "@/lib/auth";
+import { SidebarProvider } from "@/components/ui/sidebar"; // Import SidebarProvider
+import { NavMain } from "@/components/nav-main"; // Import NavMain
+
+// Helper function to determine initial open sections based on pathname
+function getInitialOpenSections(pathname: string): string[] {
+  // Implement logic here to determine which sections should be open by default
+  // based on the current pathname. For example:
+  if (pathname.startsWith('/dashboard/crm')) {
+    return ['CRM & Sales']; // Assuming 'CRM & Sales' is the title of the collapsible section
+  }
+  // Add more conditions for other sections
+  return []; // Default to no sections open
+}
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const headersList = headers();
+  const pathname = headersList.get('x-pathname') || ''; // Get pathname from headers
+  const initialOpenSections = getInitialOpenSections(pathname);
+
+  return (
+    <html lang="en">
+      <body>
+        <AuthProvider>
+          <SidebarProvider initialOpenSections={initialOpenSections}>
+            {/* Your main layout content, including NavMain */}
+            {children}
+          </SidebarProvider>
+        </AuthProvider>
+      </body>
+    </html>
+  );
+}
+```
 
 ## 6. Next Steps
 

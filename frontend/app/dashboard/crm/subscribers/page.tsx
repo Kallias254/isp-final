@@ -1,8 +1,5 @@
-'use client'
-
 import * as React from "react"
 import { ColumnFiltersState, SortingState, VisibilityState, Table } from "@tanstack/react-table"
-import useSWR from 'swr'
 
 import { Input } from "@/components/ui/input"
 import { DataTable } from "@/components/data-table"
@@ -21,69 +18,28 @@ import { IconLayoutColumns, IconChevronDown } from "@tabler/icons-react"
 import { Subscriber } from "@/payload-types"
 import Link from "next/link"
 import { apiFetch } from "@/lib/api"
+import { SubscribersTable } from "./subscribers-table"
+import { cookies } from 'next/headers'; // Import cookies
 
-const fetcher = (url: string) => apiFetch(url).then(res => res.json());
+async function getSubscribers() {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('payload-token')?.value; // Get token from cookies
 
-const CustomToolbar = (table: Table<Subscriber>) => (
-    <div className="flex items-center justify-between py-4">
-        <div className="flex items-center gap-2">
-            <Input
-            placeholder="Filter by name..."
-            value={(table.getColumn("firstName")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-                table.getColumn("firstName")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-            />
-        </div>
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-                <IconLayoutColumns />
-                <span className="hidden lg:inline">Customize Columns</span>
-                <span className="lg:hidden">Columns</span>
-                <IconChevronDown />
-            </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-            {table
-                .getAllColumns()
-                .filter(
-                (column) =>
-                    typeof column.accessorFn !== "undefined" &&
-                    column.getCanHide()
-                )
-                .map((column) => {
-                return (
-                    <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                    }
-                    >
-                    {column.id}
-                    </DropdownMenuCheckboxItem>
-                )
-                })}
-            </DropdownMenuContent>
-        </DropdownMenu>
-    </div>
-)
+    const response = await apiFetch('/subscribers', {}, token); // Pass token to apiFetch
+    if (!response.ok) {
+      throw new Error('Failed to fetch subscribers');
+    }
+    const data = await response.json();
+    return data.docs as Subscriber[];
+  } catch (error) {
+    console.error(error);
+    return []; // Return an empty array on error
+  }
+}
 
-export default function SubscribersPage() {
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  )
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = React.useState({})
-
-  const { data: subscribersData, error, isLoading } = useSWR<any>('/subscribers', fetcher);
-
-  if (error) return <div>Failed to load subscribers. Please try again later.</div>
-  if (isLoading) return <div>Loading...</div>
+export default async function SubscribersPage() {
+  const subscribersData = await getSubscribers();
 
   return (
     <div className="container mx-auto py-10">
@@ -111,19 +67,7 @@ export default function SubscribersPage() {
                 <Button>Create Subscriber</Button>
             </Link>
         </div>
-      <DataTable
-        columns={columns}
-        data={subscribersData?.docs || []}
-        toolbar={CustomToolbar}
-        sorting={sorting}
-        setSorting={setSorting}
-        columnFilters={columnFilters}
-        setColumnFilters={setColumnFilters}
-        columnVisibility={columnVisibility}
-        setColumnVisibility={setColumnVisibility}
-        rowSelection={rowSelection}
-        setRowSelection={setRowSelection}
-      />
+      <SubscribersTable initialData={subscribersData} />
     </div>
   )
 }

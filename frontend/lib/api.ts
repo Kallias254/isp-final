@@ -4,9 +4,10 @@
  * On the server (SSR/RSC), it can be adapted to use other auth methods if needed.
  * @param url - The URL path to fetch (e.g., '/subscribers')
  * @param options - Optional RequestInit options to merge with defaults
+ * @param token - Optional: JWT token to use for authentication. Primarily for server-side use.
  * @returns The fetch Response object
  */
-export async function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
+export async function apiFetch(url: string, options: RequestInit = {}, token?: string): Promise<Response> {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
   const defaultOptions: RequestInit = {
@@ -24,16 +25,15 @@ export async function apiFetch(url: string, options: RequestInit = {}): Promise<
     },
   };
 
-  if (typeof window !== 'undefined') {
-    // On the client, get the token from local storage
-    const token = localStorage.getItem('payload-token');
-    if (token) {
-      mergedOptions.headers['Authorization'] = `JWT ${token}`;
+  // Prioritize the token passed as an argument
+  if (token) {
+    mergedOptions.headers['Authorization'] = `JWT ${token}`;
+  } else if (typeof window !== 'undefined') {
+    // On the client, get the token from local storage if not provided as an argument
+    const clientToken = localStorage.getItem('payload-token');
+    if (clientToken) {
+      mergedOptions.headers['Authorization'] = `JWT ${clientToken}`;
     }
-  } else {
-    // On the server, you might handle auth differently, e.g., with service accounts or forwarded headers.
-    // The previous cookie-forwarding logic is removed in favor of a clear token-based strategy.
-    // If server-side auth is needed, it should be implemented here.
   }
 
   const fullUrl = `${API_URL}${url}`;

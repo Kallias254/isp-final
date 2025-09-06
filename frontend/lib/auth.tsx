@@ -6,7 +6,7 @@ import { apiFetch } from './api';
 interface User {
   id: string;
   email: string;
-  name: string;
+  fullName: string;
   roles: string[];
   // Add any other user properties you need
 }
